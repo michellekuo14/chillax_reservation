@@ -212,10 +212,19 @@
         people
       };
 
-      const query = new URLSearchParams(payload).toString();
+      try {
+        const res = await fetch(url);
+        const result = await res.json();
+      } catch (err) {
+        alert("連線失敗：" + err);
+      }
 
-      const res = await fetch(`${GAS_URL}?${query}`);
-      
+      const query = new URLSearchParams(payload).toString();
+      const url = `${GAS_URL}?${query}`;
+
+      console.log("request url:", url);
+      const res = await fetch(url);
+
 
       // const res = await fetch(GAS_URL, {
       //   method: "POST",
