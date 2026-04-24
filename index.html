@@ -132,6 +132,8 @@
       loadSlots();
     }
 
+
+
     async function loadSlots() {
       try {
         const res = await fetch(`${GAS_URL}?action=getSlots`);
@@ -140,7 +142,7 @@
         const container = document.getElementById("slots");
         container.innerHTML = "";
 
-        data.forEach((s) => {
+        data.forEach((s, idx) => {
           const div = document.createElement("div");
           div.className = "card";
 
@@ -155,56 +157,27 @@
           <div class="slot-sub">${statusText}</div>
           `;
 
-
           // ❗ 如果滿了 → 禁用
           if (remaining <= 0) {
             div.style.opacity = "0.5";
             div.style.pointerEvents = "none";
           }
 
-          // ✅ 點擊選擇
-          div.addEventListener("click", () => {
+          div.onclick = () => {
             document.querySelectorAll(".card").forEach(c => c.classList.remove("selected"));
             div.classList.add("selected");
-
             selected = s;
             console.log("選到:", selected);
-          });
+          };
 
           container.appendChild(div);
         });
-
       } catch (err) {
         console.error(err);
         document.getElementById("slots").innerHTML = "❌ 載入失敗";
       }
+
     }
-
-    // async function loadSlots() {
-    //   const res = await fetch(`${GAS_URL}?action=getSlots`);
-    //   const data = await res.json();
-
-    //   const container = document.getElementById("slots");
-    //   container.innerHTML = "";
-
-    //   data.forEach((s, idx) => {
-    //     const div = document.createElement("div");
-    //     div.className = "card";
-
-    //     div.innerHTML = `
-    //       <div class="slot-title">${s.type} - ${s.slot}</div>
-    //       <div class="slot-sub">剩餘：${s.maxPeople - s.currentPeople} 人</div>
-    //     `;
-
-    //     div.onclick = () => {
-    //       document.querySelectorAll(".card").forEach(c => c.classList.remove("selected"));
-    //       div.classList.add("selected");
-    //       selected = s;
-    //     };
-
-    //     container.appendChild(div);
-    //   });
-    // }
 
     async function submitBooking() {
       const name = document.getElementById("name").value;
