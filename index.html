@@ -2,36 +2,112 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Booking System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>我要報名團練</title>
+
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    YOUR_GAS_URL = "https://script.google.com/macros/s/AKfycbyw7KenXXDbiT8-EMT355PN5iwvlIS2RNXPPVOHkOM-m42SpUc2afxNAe2UexsmVHOi/exec";
+    YOUR_LIFF_ID = "2009884041-ANvyV2S7";
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+      background: #f5f6f8;
+    }
+
+    .header {
+      background: #06c755;
+      color: white;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .slot-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .slot-sub {
+      font-size: 13px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: #06c755;
+      color: white;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+    .btn:disabled {
+      background: #ccc;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+
+    .selected {
+      border: 2px solid #06c755;
+    }
+  </style>
 </head>
 
 <body>
-  <h2>預約系統</h2>
 
-  <div>
-    <label>姓名：</label>
-    <input id="name" />
+<div class="header">📅 團練預約</div>
+
+<div class="container">
+
+  <div class="card">
+    <div>姓名</div>
+    <input id="name" placeholder="請輸入姓名" />
   </div>
 
-  <div>
-    <label>人數：</label>
+  <div class="card">
+    <div>人數</div>
     <input id="people" type="number" value="1" />
   </div>
 
-  <hr />
-
   <div id="slots"></div>
 
-  <button onclick="submitBooking()">送出預約</button>
+  <button class="btn" onclick="submitBooking()">確認報名</button>
+
+</div>
+
 
 <script>
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyw7KenXXDbiT8-EMT355PN5iwvlIS2RNXPPVOHkOM-m42SpUc2afxNAe2UexsmVHOi/exec";
-let selected = null;
+const GAS_URL = YOUR_GAS_URL;
 let userId = "";
+let selected = null;
 
 async function init() {
-  await liff.init({ liffId: "2009884041-ANvyV2S7" });
+  await liff.init({ liffId: YOUR_LIFF_ID });
 
   const profile = await liff.getProfile();
   userId = profile.userId;
@@ -46,15 +122,18 @@ async function loadSlots() {
   const container = document.getElementById("slots");
   container.innerHTML = "";
 
-  data.forEach((s, index) => {
+  data.forEach((s, idx) => {
     const div = document.createElement("div");
+    div.className = "card";
+
     div.innerHTML = `
-      <input type="radio" name="slot" value="${index}" />
-      ${s.type} / ${s.slot}
-      - 剩餘: ${s.remaining}
+      <div class="slot-title">${s.type} - ${s.slot}</div>
+      <div class="slot-sub">剩餘：${s.maxPeople - s.currentPeople} 人</div>
     `;
 
-    div.querySelector("input").onclick = () => {
+    div.onclick = () => {
+      document.querySelectorAll(".card").forEach(c => c.classList.remove("selected"));
+      div.classList.add("selected");
       selected = s;
     };
 
@@ -67,7 +146,7 @@ async function submitBooking() {
   const people = Number(document.getElementById("people").value);
 
   if (!selected) {
-    alert("請選擇 slot");
+    alert("請選擇場次");
     return;
   }
 
@@ -88,7 +167,7 @@ async function submitBooking() {
   const result = await res.json();
 
   if (result.success) {
-    alert("預約成功！");
+    alert("報名成功！");
     loadSlots();
   } else {
     alert(result.message);
