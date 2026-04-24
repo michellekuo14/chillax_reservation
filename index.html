@@ -117,6 +117,9 @@
 
 
   <script>
+    window.onerror = function (msg, url, line) {
+      alert("JS錯誤: " + msg + "\nline: " + line);
+    };
 
     let userId = "";
     let selected = null;
