@@ -119,7 +119,7 @@
   <script>
     window.onerror = function (msg, url, line) {
       alert("JS錯誤: " + msg + "\nline: " + line);
-    }; 
+    };
     window.addEventListener("unhandledrejection", function (event) {
       alert("Promise錯誤: " + event.reason);
     });
@@ -212,14 +212,18 @@
         people
       };
 
+      const query = new URLSearchParams(payload).toString();
 
-      const res = await fetch(GAS_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
+      const res = await fetch(`${GAS_URL}?${query}`);
+      
+
+      // const res = await fetch(GAS_URL, {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json"
+      //   },
+      //   body: JSON.stringify(payload)
+      // });
 
       const result = await res.json();
 
