@@ -164,6 +164,9 @@ async function submitBooking() {
   const emergency = document.getElementById("emergency").value;
   const people = Number(document.getElementById("people").value);
 
+  
+  alert("click到了");  // 🔥 加這行
+
   if (!selected) {
     alert("選擇團練場次");
     return;
@@ -194,6 +197,7 @@ async function submitBooking() {
   } else {
     alert(result.message);
   }
+  console.log("start submit");
 }
 
 init();
