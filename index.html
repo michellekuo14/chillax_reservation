@@ -202,13 +202,33 @@
       }, 1500);
     }
 
+    async function loadInformation() {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getInformation`);
+        const data = await res.json();
+
+        document.getElementById("infoContent").innerText = data.content;
+
+        // 顯示 modal
+        document.getElementById("infoModal").classList.add("show");
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function confirmInfo() {
+      document.getElementById("infoModal").classList.remove("show");
+
+      // 👉 開始載入 slots
+      loadSlots();
+    }
+
     async function init() {
       await liff.init({ liffId: YOUR_LIFF_ID });
 
       const profile = await liff.getProfile();
       userId = profile.userId;
-
-      loadSlots();
     }
 
     async function loadSlots() {
@@ -221,7 +241,6 @@
         const res = await fetch(`${GAS_URL}?action=getSlots`);
         const data = await res.json();
 
-        const container = document.getElementById("slots");
         container.innerHTML = "";
 
         data.forEach((s, idx) => {
@@ -265,7 +284,7 @@
 
       const btn = document.querySelector(".btn"); // 👉 抓按鈕
       btn.disabled = true; // 👉 一按就鎖住（防連點）
-      btn.innerText = "送出中...";
+      btn.innerText = "處理中...";
 
       try {
         const name = document.getElementById("name").value;
@@ -280,6 +299,9 @@
           alert("選擇團練場次");
           return;
         }
+
+        const btn = document.querySelector(".btn");
+        btn.disabled = true;
 
         const payload = {
           action: "createBooking",
@@ -307,7 +329,6 @@
 
         if (result.success) {
           showSuccess();   // 🔥 成功動畫 + 自動關閉
-          loadSlots();
         } else {
           alert(result.message || "報名失敗");
         }
@@ -317,20 +338,33 @@
         alert("連線失敗：" + err);
       } finally {
         // 🔥 不管成功或失敗都會執行（關鍵）
-        btn.innerText = "送出中...";
+        btn.innerText = "確認報名";
         btn.disabled = false;
       }
     }
 
-    loadSlots();  // 直接先跑
-    init();
-
+    init().then(() => {
+      if (localStorage.getItem("readInfo")) {
+        loadSlots();
+      } else {
+        loadInformation();
+      }
+    });
   </script>
 
   <div id="successModal" class="modal">
     <div class="modal-content">
       <div class="checkmark">✔</div>
       <div class="success-text">報名成功！</div>
+    </div>
+  </div>
+
+  <div id="infoModal" class="modal">
+    <div class="modal-content">
+      <div class="success-text">📢 注意事項</div>
+      <div id="infoContent" style="margin-top:10px; font-size:14px; white-space:pre-line;"></div>
+
+      <button class="btn" onclick="confirmInfo()">我已閱讀</button>
     </div>
   </div>
 
