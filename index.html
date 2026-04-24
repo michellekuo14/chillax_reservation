@@ -9,6 +9,65 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      text-align: center;
+      animation: pop 0.3s ease;
+    }
+
+    .checkmark {
+      font-size: 50px;
+      color: #06c755;
+      animation: scale 0.4s ease;
+    }
+
+    .success-text {
+      margin-top: 10px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    @keyframes pop {
+      from {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes scale {
+      from {
+        transform: scale(0);
+      }
+
+      to {
+        transform: scale(1);
+      }
+    }
+
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
@@ -129,6 +188,19 @@
       alert("Promise錯誤: " + event.reason);
     });
 
+    function showSuccess() {
+      const modal = document.getElementById("successModal");
+      modal.classList.add("show");
+
+      // 1.5 秒後關閉 LIFF
+      setTimeout(() => {
+        if (liff.isInClient()) {
+          liff.closeWindow(); // 👉 回到 LINE
+        } else {
+          modal.classList.remove("show"); // 電腦測試用
+        }
+      }, 1500);
+    }
 
     async function init() {
       await liff.init({ liffId: YOUR_LIFF_ID });
@@ -140,6 +212,11 @@
     }
 
     async function loadSlots() {
+      const container = document.getElementById("slots");
+
+      // 👉 先顯示 skeleton（立即反應）
+      container.innerHTML = "載入中...";
+
       try {
         const res = await fetch(`${GAS_URL}?action=getSlots`);
         const data = await res.json();
@@ -185,59 +262,77 @@
     }
 
     async function submitBooking() {
-  try {
-    const name = document.getElementById("name").value;
-    const phone = document.getElementById("phone").value;
-    const license = document.getElementById("license").value;
-    const emergency = document.getElementById("emergency").value;
-    const people = Number(document.getElementById("people").value);
 
-    //alert("click到了");
+      const btn = document.querySelector(".btn"); // 👉 抓按鈕
+      btn.disabled = true; // 👉 一按就鎖住（防連點）
+      btn.innerText = "送出中...";
 
-    if (!selected) {
-      alert("選擇團練場次");
-      return;
+      try {
+        const name = document.getElementById("name").value;
+        const phone = document.getElementById("phone").value;
+        const license = document.getElementById("license").value;
+        const emergency = document.getElementById("emergency").value;
+        const people = Number(document.getElementById("people").value);
+
+        //alert("click到了");
+
+        if (!selected) {
+          alert("選擇團練場次");
+          return;
+        }
+
+        const payload = {
+          action: "createBooking",
+          userId,
+          name,
+          phone,
+          license,
+          emergency,
+          type: selected.type,
+          slot: selected.slot,
+          people
+        };
+
+        // ✅ 正確：先建立 URL
+        const query = new URLSearchParams(payload).toString();
+        const url = `${GAS_URL}?${query}`;
+
+        console.log("request url:", url);
+
+        // ✅ 只 fetch 一次
+        const res = await fetch(url);
+        const result = await res.json();
+
+        console.log("result:", result);
+
+        if (result.success) {
+          showSuccess();   // 🔥 成功動畫 + 自動關閉
+          loadSlots();
+        } else {
+          alert(result.message || "報名失敗");
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert("連線失敗：" + err);
+      } finally {
+        // 🔥 不管成功或失敗都會執行（關鍵）
+        btn.innerText = "送出中...";
+        btn.disabled = false;
+      }
     }
 
-    const payload = {
-      action: "createBooking",
-      userId,
-      name,
-      phone,
-      license,
-      emergency,
-      type: selected.type,
-      slot: selected.slot,
-      people
-    };
-
-    // ✅ 正確：先建立 URL
-    const query = new URLSearchParams(payload).toString();
-    const url = `${GAS_URL}?${query}`;
-
-    console.log("request url:", url);
-
-    // ✅ 只 fetch 一次
-    const res = await fetch(url);
-    const result = await res.json();
-
-    console.log("result:", result);
-
-    if (result.success) {
-      alert("報名成功！");
-      loadSlots();
-    } else {
-      alert(result.message || "報名失敗");
-    }
-
-  } catch (err) {
-    console.error(err);
-    alert("連線失敗：" + err);
-  }
-}
-
+    loadSlots();  // 直接先跑
     init();
+
   </script>
+
+  <div id="successModal" class="modal">
+    <div class="modal-content">
+      <div class="checkmark">✔</div>
+      <div class="success-text">報名成功！</div>
+    </div>
+  </div>
 
 </body>
 
