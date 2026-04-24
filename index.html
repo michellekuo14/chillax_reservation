@@ -6,10 +6,6 @@
   <title>我要報名團練</title>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script>
-    YOUR_GAS_URL = "https://script.google.com/macros/s/AKfycbyw7KenXXDbiT8-EMT355PN5iwvlIS2RNXPPVOHkOM-m42SpUc2afxNAe2UexsmVHOi/exec";
-    YOUR_LIFF_ID = "2009884041-ANvyV2S7";
-  </script>
 
   <style>
     body {
@@ -78,8 +74,11 @@
   </style>
 </head>
 
+
+
 <body>
 
+ 
 <div class="header">📅 團練預約</div>
 
 <div class="container">
@@ -90,7 +89,22 @@
   </div>
 
   <div class="card">
-    <div>人數</div>
+    <div>連絡電話</div>
+    <input id="phone" type="number"/>
+  </div>
+
+  <div class="card">
+    <div>證照等級</div>
+    <input id="license"  />
+  </div>
+
+  <div class="card">
+    <div>緊急聯絡人/電話</div>
+    <input id="emergency" />
+  </div>
+
+  <div class="card">
+    <div>報名人數</div>
     <input id="people" type="number" value="1" />
   </div>
 
@@ -102,9 +116,11 @@
 
 
 <script>
-const GAS_URL = YOUR_GAS_URL;
+
 let userId = "";
 let selected = null;
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyw7KenXXDbiT8-EMT355PN5iwvlIS2RNXPPVOHkOM-m42SpUc2afxNAe2UexsmVHOi/exec";
+const YOUR_LIFF_ID = "2009884041-ANvyV2S7";
 
 async function init() {
   await liff.init({ liffId: YOUR_LIFF_ID });
@@ -143,10 +159,13 @@ async function loadSlots() {
 
 async function submitBooking() {
   const name = document.getElementById("name").value;
+  const phpne = document.getElementById("phone").value;
+  const license = document.getElementById("license").value;
+  const emergency = document.getElementById("emergency").value;
   const people = Number(document.getElementById("people").value);
 
   if (!selected) {
-    alert("請選擇場次");
+    alert("選擇團練場次");
     return;
   }
 
@@ -154,6 +173,9 @@ async function submitBooking() {
     action: "createBooking",
     userId,
     name,
+    phobe,
+    license,
+    emergency,
     type: selected.type,
     slot: selected.slot,
     people
