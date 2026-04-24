@@ -121,7 +121,7 @@
     const YOUR_LIFF_ID = "2009884041-ANvyV2S7";
     let userId = "";
     let selected = null;
-    
+
     window.onerror = function (msg, url, line) {
       alert("JS錯誤: " + msg + "\nline: " + line);
     };
@@ -138,8 +138,6 @@
 
       loadSlots();
     }
-
-
 
     async function loadSlots() {
       try {
@@ -187,64 +185,56 @@
     }
 
     async function submitBooking() {
-      const name = document.getElementById("name").value;
-      const phpne = document.getElementById("phone").value;
-      const license = document.getElementById("license").value;
-      const emergency = document.getElementById("emergency").value;
-      const people = Number(document.getElementById("people").value);
+  try {
+    const name = document.getElementById("name").value;
+    const phone = document.getElementById("phone").value;
+    const license = document.getElementById("license").value;
+    const emergency = document.getElementById("emergency").value;
+    const people = Number(document.getElementById("people").value);
 
+    alert("click到了");
 
-      alert("click到了");  // 🔥 加這行
-
-      if (!selected) {
-        alert("選擇團練場次");
-        return;
-      }
-
-      const payload = {
-        action: "createBooking",
-        userId,
-        name,
-        phone,
-        license,
-        emergency,
-        type: selected.type,
-        slot: selected.slot,
-        people
-      };
-
-      try {
-        const res = await fetch(url);
-        const result = await res.json();
-      } catch (err) {
-        alert("連線失敗：" + err);
-      }
-
-      const query = new URLSearchParams(payload).toString();
-      const url = `${GAS_URL}?${query}`;
-
-      console.log("request url:", url);
-      const res = await fetch(url);
-
-
-      // const res = await fetch(GAS_URL, {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json"
-      //   },
-      //   body: JSON.stringify(payload)
-      // });
-
-      const result = await res.json();
-
-      if (result.success) {
-        alert("報名成功！");
-        loadSlots();
-      } else {
-        alert(result.message);
-      }
-      console.log("start submit");
+    if (!selected) {
+      alert("選擇團練場次");
+      return;
     }
+
+    const payload = {
+      action: "createBooking",
+      userId,
+      name,
+      phone,
+      license,
+      emergency,
+      type: selected.type,
+      slot: selected.slot,
+      people
+    };
+
+    // ✅ 正確：先建立 URL
+    const query = new URLSearchParams(payload).toString();
+    const url = `${GAS_URL}?${query}`;
+
+    console.log("request url:", url);
+
+    // ✅ 只 fetch 一次
+    const res = await fetch(url);
+    const result = await res.json();
+
+    console.log("result:", result);
+
+    if (result.success) {
+      alert("報名成功！");
+      loadSlots();
+    } else {
+      alert(result.message || "報名失敗");
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("連線失敗：" + err);
+  }
+}
 
     init();
   </script>
