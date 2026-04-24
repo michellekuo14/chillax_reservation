@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -31,7 +32,7 @@
       border-radius: 12px;
       padding: 12px;
       margin-bottom: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 
     .slot-title {
@@ -78,163 +79,183 @@
 
 <body>
 
- 
-<div class="header">📅 團練預約</div>
 
-<div class="container">
+  <div class="header">📅 團練預約</div>
 
-  <div class="card">
-    <div>姓名</div>
-    <input id="name" placeholder="請輸入姓名" />
+  <div class="container">
+
+    <div class="card">
+      <div>姓名</div>
+      <input id="name" placeholder="請輸入姓名" />
+    </div>
+
+    <div class="card">
+      <div>連絡電話</div>
+      <input id="phone" type="number" />
+    </div>
+
+    <div class="card">
+      <div>證照等級</div>
+      <input id="license" />
+    </div>
+
+    <div class="card">
+      <div>緊急聯絡人/電話</div>
+      <input id="emergency" />
+    </div>
+
+    <div class="card">
+      <div>報名人數</div>
+      <input id="people" type="number" value="1" />
+    </div>
+
+    <div id="slots"></div>
+
+    <button class="btn" onclick="submitBooking()">確認報名</button>
+
   </div>
 
-  <div class="card">
-    <div>連絡電話</div>
-    <input id="phone" type="number"/>
-  </div>
 
-  <div class="card">
-    <div>證照等級</div>
-    <input id="license"  />
-  </div>
+  <script>
 
-  <div class="card">
-    <div>緊急聯絡人/電話</div>
-    <input id="emergency" />
-  </div>
+    let userId = "";
+    let selected = null;
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyw7KenXXDbiT8-EMT355PN5iwvlIS2RNXPPVOHkOM-m42SpUc2afxNAe2UexsmVHOi/exec";
+    const YOUR_LIFF_ID = "2009884041-ANvyV2S7";
 
-  <div class="card">
-    <div>報名人數</div>
-    <input id="people" type="number" value="1" />
-  </div>
+    async function init() {
+      await liff.init({ liffId: YOUR_LIFF_ID });
 
-  <div id="slots"></div>
+      const profile = await liff.getProfile();
+      userId = profile.userId;
 
-  <button class="btn" onclick="submitBooking()">確認報名</button>
+      loadSlots();
+    }
 
-</div>
+    async function loadSlots() {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getSlots`);
+        const data = await res.json();
 
+        const container = document.getElementById("slots");
+        container.innerHTML = "";
 
-<script>
+        data.forEach((s) => {
+          const div = document.createElement("div");
+          div.className = "card";
 
-let userId = "";
-let selected = null;
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyw7KenXXDbiT8-EMT355PN5iwvlIS2RNXPPVOHkOM-m42SpUc2afxNAe2UexsmVHOi/exec";
-const YOUR_LIFF_ID = "2009884041-ANvyV2S7";
+          const remaining = s.maxPeople - s.currentPeople;
 
-async function init() {
-  await liff.init({ liffId: YOUR_LIFF_ID });
+          let statusText = remaining > 0
+            ? `剩餘：${remaining} 人`
+            : `❌ 已額滿`;
 
-  const profile = await liff.getProfile();
-  userId = profile.userId;
-
-  loadSlots();
-}
-
-async function loadSlots() {
-  try {
-    console.log("開始抓 slots...");
-
-    const res = await fetch(`${GAS_URL}?action=getSlots`);
-    console.log("res:", res);
-
-    const text = await res.text();
-    console.log("raw:", text);
-
-    const data = JSON.parse(text);
-
-    console.log("data:", data);
-
-    const container = document.getElementById("slots");
-    container.innerHTML = "";
-
-    data.forEach((s) => {
-      const div = document.createElement("div");
-      div.innerHTML = `${s.type} - ${s.slot} 剩餘:${s.remaining}`;
-      container.appendChild(div);
-    });
-
-  } catch (err) {
-    console.error("錯誤:", err);
-    document.getElementById("slots").innerHTML = "❌ 載入失敗";
-  }
-}
-
-// async function loadSlots() {
-//   const res = await fetch(`${GAS_URL}?action=getSlots`);
-//   const data = await res.json();
-
-//   const container = document.getElementById("slots");
-//   container.innerHTML = "";
-
-//   data.forEach((s, idx) => {
-//     const div = document.createElement("div");
-//     div.className = "card";
-
-//     div.innerHTML = `
-//       <div class="slot-title">${s.type} - ${s.slot}</div>
-//       <div class="slot-sub">剩餘：${s.maxPeople - s.currentPeople} 人</div>
-//     `;
-
-//     div.onclick = () => {
-//       document.querySelectorAll(".card").forEach(c => c.classList.remove("selected"));
-//       div.classList.add("selected");
-//       selected = s;
-//     };
-
-//     container.appendChild(div);
-//   });
-// }
-
-async function submitBooking() {
-  const name = document.getElementById("name").value;
-  const phpne = document.getElementById("phone").value;
-  const license = document.getElementById("license").value;
-  const emergency = document.getElementById("emergency").value;
-  const people = Number(document.getElementById("people").value);
-
-  
-  alert("click到了");  // 🔥 加這行
-
-  if (!selected) {
-    alert("選擇團練場次");
-    return;
-  }
-
-  const payload = {
-    action: "createBooking",
-    userId,
-    name,
-    phobe,
-    license,
-    emergency,
-    type: selected.type,
-    slot: selected.slot,
-    people
-  };
+          div.innerHTML = `
+          <div class="slot-title">${s.type} - ${s.slot}</div>
+          <div class="slot-sub">${statusText}</div>
+          `;
 
 
-  const res = await fetch(GAS_URL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify(payload)
-});
+          // ❗ 如果滿了 → 禁用
+          if (remaining <= 0) {
+            div.style.opacity = "0.5";
+            div.style.pointerEvents = "none";
+          }
 
-  const result = await res.json();
+          // ✅ 點擊選擇
+          div.addEventListener("click", () => {
+            document.querySelectorAll(".card").forEach(c => c.classList.remove("selected"));
+            div.classList.add("selected");
 
-  if (result.success) {
-    alert("報名成功！");
-    loadSlots();
-  } else {
-    alert(result.message);
-  }
-  console.log("start submit");
-}
+            selected = s;
+            console.log("選到:", selected);
+          });
 
-init();
-</script>
+          container.appendChild(div);
+        });
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById("slots").innerHTML = "❌ 載入失敗";
+      }
+    }
+
+    // async function loadSlots() {
+    //   const res = await fetch(`${GAS_URL}?action=getSlots`);
+    //   const data = await res.json();
+
+    //   const container = document.getElementById("slots");
+    //   container.innerHTML = "";
+
+    //   data.forEach((s, idx) => {
+    //     const div = document.createElement("div");
+    //     div.className = "card";
+
+    //     div.innerHTML = `
+    //       <div class="slot-title">${s.type} - ${s.slot}</div>
+    //       <div class="slot-sub">剩餘：${s.maxPeople - s.currentPeople} 人</div>
+    //     `;
+
+    //     div.onclick = () => {
+    //       document.querySelectorAll(".card").forEach(c => c.classList.remove("selected"));
+    //       div.classList.add("selected");
+    //       selected = s;
+    //     };
+
+    //     container.appendChild(div);
+    //   });
+    // }
+
+    async function submitBooking() {
+      const name = document.getElementById("name").value;
+      const phpne = document.getElementById("phone").value;
+      const license = document.getElementById("license").value;
+      const emergency = document.getElementById("emergency").value;
+      const people = Number(document.getElementById("people").value);
+
+
+      alert("click到了");  // 🔥 加這行
+
+      if (!selected) {
+        alert("選擇團練場次");
+        return;
+      }
+
+      const payload = {
+        action: "createBooking",
+        userId,
+        name,
+        phobe,
+        license,
+        emergency,
+        type: selected.type,
+        slot: selected.slot,
+        people
+      };
+
+
+      const res = await fetch(GAS_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        alert("報名成功！");
+        loadSlots();
+      } else {
+        alert(result.message);
+      }
+      console.log("start submit");
+    }
+
+    init();
+  </script>
 
 </body>
+
 </html>
