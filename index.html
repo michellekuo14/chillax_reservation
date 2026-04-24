@@ -117,6 +117,11 @@
 
 
   <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyw7KenXXDbiT8-EMT355PN5iwvlIS2RNXPPVOHkOM-m42SpUc2afxNAe2UexsmVHOi/exec";
+    const YOUR_LIFF_ID = "2009884041-ANvyV2S7";
+    let userId = "";
+    let selected = null;
+    
     window.onerror = function (msg, url, line) {
       alert("JS錯誤: " + msg + "\nline: " + line);
     };
@@ -124,10 +129,6 @@
       alert("Promise錯誤: " + event.reason);
     });
 
-    let userId = "";
-    let selected = null;
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyw7KenXXDbiT8-EMT355PN5iwvlIS2RNXPPVOHkOM-m42SpUc2afxNAe2UexsmVHOi/exec";
-    const YOUR_LIFF_ID = "2009884041-ANvyV2S7";
 
     async function init() {
       await liff.init({ liffId: YOUR_LIFF_ID });
