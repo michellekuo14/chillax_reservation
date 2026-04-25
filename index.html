@@ -134,10 +134,7 @@
   </style>
 </head>
 
-
-
 <body>
-
 
   <div class="header">📅 團練預約</div>
 
@@ -185,187 +182,164 @@
     <div class="modal-content">
       <div class="success-text">📢 注意事項</div>
       <div id="infoContent" style="margin-top:10px; font-size:14px; white-space:pre-line;"></div>
-
       <button class="btn" id="confirmInfoBtn" onclick="confirmInfo()">我已閱讀</button>
     </div>
+  </div>
 
-    <script>
-      const GAS_URL = "https://script.google.com/macros/s/AKfycbyw7KenXXDbiT8-EMT355PN5iwvlIS2RNXPPVOHkOM-m42SpUc2afxNAe2UexsmVHOi/exec";
-      const YOUR_LIFF_ID = "2009884041-ANvyV2S7";
-      let userId = "";
-      let selected = null;
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyw7KenXXDbiT8-EMT355PN5iwvlIS2RNXPPVOHkOM-m42SpUc2afxNAe2UexsmVHOi/exec";
+    const YOUR_LIFF_ID = "2009884041-ANvyV2S7";
+    let userId = "";
+    let selected = null;
 
-      window.onerror = function (msg, url, line) {
-        alert("JS錯誤: " + msg + "\nline: " + line);
-      };
-      window.addEventListener("unhandledrejection", function (event) {
-        alert("Promise錯誤: " + event.reason);
-      });
+    window.onerror = function (msg, url, line) {
+      alert("JS錯誤: " + msg + "\nline: " + line);
+    };
+    window.addEventListener("unhandledrejection", function (event) {
+      alert("Promise錯誤: " + event.reason);
+    });
 
-      function showSuccess() {
-        const modal = document.getElementById("successModal");
-        modal.classList.add("show");
+    function showSuccess() {
+      const modal = document.getElementById("successModal");
+      modal.classList.add("show");
 
-        // 1.5 秒後關閉 LIFF
-        setTimeout(() => {
-          if (liff.isInClient()) {
-            liff.closeWindow(); // 👉 回到 LINE
-          } else {
-            modal.classList.remove("show"); // 電腦測試用
-          }
-        }, 1500);
-      }
-
-      async function loadInformation() {
-        const btn = document.getElementById("confirmInfoBtn");
-        try {
-          const res = await fetch(`${GAS_URL}?action=getInformation`);
-          const data = await res.json();
-          document.getElementById("infoContent").innerText = data.content;
-          btn.disabled = false;
-          btn.innerText = "我已閱讀";
-        } catch (err) {
-          console.error(err);
-          document.getElementById("infoContent").innerText = "❌ 載入失敗,請重新整理";
+      setTimeout(() => {
+        if (liff.isInClient()) {
+          liff.closeWindow();
+        } else {
+          modal.classList.remove("show");
         }
+      }, 1500);
+    }
+
+    async function loadInformation() {
+      const btn = document.getElementById("confirmInfoBtn");
+      try {
+        const res = await fetch(`${GAS_URL}?action=getInformation`);
+        const data = await res.json();
+        document.getElementById("infoContent").innerText = data.content;
+        btn.disabled = false;
+        btn.innerText = "我已閱讀";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("infoContent").innerText = "❌ 載入失敗,請重新整理";
       }
+    }
 
-      function confirmInfo() {
-        document.getElementById("infoModal").classList.remove("show");
-      }
+    function confirmInfo() {
+      document.getElementById("infoModal").classList.remove("show");
+    }
 
-      async function init() {
-        await liff.init({ liffId: YOUR_LIFF_ID });
+    async function init() {
+      await liff.init({ liffId: YOUR_LIFF_ID });
+      const profile = await liff.getProfile();
+      userId = profile.userId;
+    }
 
-        const profile = await liff.getProfile();
-        userId = profile.userId;
-      }
+    async function loadSlots() {
+      const container = document.getElementById("slots");
+      container.innerHTML = "載入中...";
 
-      async function loadSlots() {
-        const container = document.getElementById("slots");
+      try {
+        const res = await fetch(`${GAS_URL}?action=getSlots`);
+        const data = await res.json();
 
-        // 👉 先顯示 skeleton（立即反應）
-        container.innerHTML = "載入中...";
+        container.innerHTML = "";
 
-        try {
-          const res = await fetch(`${GAS_URL}?action=getSlots`);
-          const data = await res.json();
+        data.forEach((s, idx) => {
+          const div = document.createElement("div");
+          div.className = "card";
 
-          container.innerHTML = "";
+          const remaining = s.maxPeople - s.currentPeople;
+          let statusText = remaining > 0 ? `剩餘：${remaining} 人` : `❌ 已額滿`;
 
-          data.forEach((s, idx) => {
-            const div = document.createElement("div");
-            div.className = "card";
-
-            const remaining = s.maxPeople - s.currentPeople;
-
-            let statusText = remaining > 0
-              ? `剩餘：${remaining} 人`
-              : `❌ 已額滿`;
-
-            div.innerHTML = `
-          <div class="slot-title">${s.type} - ${s.slot}</div>
-          <div class="slot-sub">${statusText}</div>
+          div.innerHTML = `
+            <div class="slot-title">${s.type} - ${s.slot}</div>
+            <div class="slot-sub">${statusText}</div>
           `;
 
-            // ❗ 如果滿了 → 禁用
-            if (remaining <= 0) {
-              div.style.opacity = "0.5";
-              div.style.pointerEvents = "none";
-            }
-
-            div.onclick = () => {
-              document.querySelectorAll(".card").forEach(c => c.classList.remove("selected"));
-              div.classList.add("selected");
-              selected = s;
-              console.log("選到:", selected);
-            };
-
-            container.appendChild(div);
-          });
-        } catch (err) {
-          console.error(err);
-          document.getElementById("slots").innerHTML = "❌ 載入失敗";
-        }
-
-      }
-
-      async function submitBooking() {
-
-        const btn = document.querySelector(".btn"); // 👉 抓按鈕
-        btn.disabled = true; // 👉 一按就鎖住（防連點）
-        btn.innerText = "處理中...";
-
-        try {
-          const name = document.getElementById("name").value;
-          const phone = document.getElementById("phone").value;
-          const license = document.getElementById("license").value;
-          const emergency = document.getElementById("emergency").value;
-          const people = Number(document.getElementById("people").value);
-
-          //alert("click到了");
-
-          if (!selected) {
-            alert("選擇團練場次");
-            return;
+          if (remaining <= 0) {
+            div.style.opacity = "0.5";
+            div.style.pointerEvents = "none";
           }
 
-          const btn = document.querySelector(".btn");
-          btn.disabled = true;
-
-          const payload = {
-            action: "createBooking",
-            userId,
-            name,
-            phone,
-            license,
-            emergency,
-            type: selected.type,
-            slot: selected.slot,
-            people
+          div.onclick = () => {
+            document.querySelectorAll(".card").forEach(c => c.classList.remove("selected"));
+            div.classList.add("selected");
+            selected = s;
+            console.log("選到:", selected);
           };
 
-          // ✅ 正確：先建立 URL
-          const query = new URLSearchParams(payload).toString();
-          const url = `${GAS_URL}?${query}`;
-
-          console.log("request url:", url);
-
-          // ✅ 只 fetch 一次
-          const res = await fetch(url);
-          const result = await res.json();
-
-          console.log("result:", result);
-
-          if (result.success) {
-            showSuccess();   // 🔥 成功動畫 + 自動關閉
-          } else {
-            alert(result.message || "報名失敗");
-          }
-
-        } catch (err) {
-          console.error(err);
-          alert("連線失敗：" + err);
-        } finally {
-          // 🔥 不管成功或失敗都會執行（關鍵）
-          btn.innerText = "確認報名";
-          btn.disabled = false;
-        }
+          container.appendChild(div);
+        });
+      } catch (err) {
+        console.error(err);
+        document.getElementById("slots").innerHTML = "❌ 載入失敗";
       }
+    }
 
-      // 👇 頁面一開就立刻彈 modal(不等任何 fetch)
-      document.getElementById("infoModal").classList.add("show");
-      document.getElementById("infoContent").innerText = "載入中...";
-      document.getElementById("confirmInfoBtn").disabled = true;
+    async function submitBooking() {
+      const btn = document.querySelector(".container > .btn");
+      btn.disabled = true;
+      btn.innerText = "處理中...";
 
-      // 👇 三件事同時跑
-      init().catch(err => alert("LIFF init 失敗: " + err.message));
-      loadInformation();   // 填充 modal 內容
-      loadSlots();         // 背景載入場次
-    </script>
+      try {
+        const name = document.getElementById("name").value;
+        const phone = document.getElementById("phone").value;
+        const license = document.getElementById("license").value;
+        const emergency = document.getElementById("emergency").value;
+        const people = Number(document.getElementById("people").value);
 
+        if (!selected) {
+          alert("請選擇團練場次");
+          return;
+        }
 
-  </div>
+        const payload = {
+          action: "createBooking",
+          userId,
+          name,
+          phone,
+          license,
+          emergency,
+          type: selected.type,
+          slot: selected.slot,
+          people
+        };
+
+        const query = new URLSearchParams(payload).toString();
+        const url = `${GAS_URL}?${query}`;
+        console.log("request url:", url);
+
+        const res = await fetch(url);
+        const result = await res.json();
+        console.log("result:", result);
+
+        if (result.success) {
+          showSuccess();
+        } else {
+          alert(result.message || "報名失敗");
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert("連線失敗：" + err);
+      } finally {
+        btn.innerText = "確認報名";
+        btn.disabled = false;
+      }
+    }
+
+    // 👇 頁面一開就立刻彈 modal(瞬間反應)
+    document.getElementById("infoModal").classList.add("show");
+    document.getElementById("infoContent").innerText = "載入中...";
+    document.getElementById("confirmInfoBtn").disabled = true;
+
+    // 👇 三件事同時跑(並行,不互等)
+    init().catch(err => alert("LIFF init 失敗: " + err.message));
+    loadInformation();
+    loadSlots();
+  </script>
 
 </body>
 
