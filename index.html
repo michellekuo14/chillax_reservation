@@ -144,7 +144,7 @@
   <div class="container">
 
     <div class="card">
-      <div>姓名</div>
+      <div>姓名/Line ID</div>
       <input id="name" placeholder="請輸入姓名" />
     </div>
 
@@ -203,27 +203,21 @@
     }
 
     async function loadInformation() {
+      const btn = document.getElementById("confirmInfoBtn");
       try {
         const res = await fetch(`${GAS_URL}?action=getInformation`);
         const data = await res.json();
-
         document.getElementById("infoContent").innerText = data.content;
-
-        // 顯示 modal
-        document.getElementById("infoModal").classList.add("show");
-
+        btn.disabled = false;
+        btn.innerText = "我已閱讀";
       } catch (err) {
         console.error(err);
-        alert("載入注意事項失敗: " + err.message);
-
+        document.getElementById("infoContent").innerText = "❌ 載入失敗,請重新整理";
       }
     }
 
     function confirmInfo() {
       document.getElementById("infoModal").classList.remove("show");
-
-      // 👉 開始載入 slots
-      loadSlots();
     }
 
     async function init() {
@@ -345,13 +339,15 @@
       }
     }
 
-    init().then(() => {
-      if (localStorage.getItem("readInfo")) {
-        loadSlots();
-      } else {
-        loadInformation();
-      }
-    });
+    // 👇 頁面一開就立刻彈 modal(不等任何 fetch)
+    document.getElementById("infoModal").classList.add("show");
+    document.getElementById("infoContent").innerText = "載入中...";
+    document.getElementById("confirmInfoBtn").disabled = true;
+
+    // 👇 三件事同時跑
+    init().catch(err => alert("LIFF init 失敗: " + err.message));
+    loadInformation();   // 填充 modal 內容
+    loadSlots();         // 背景載入場次
   </script>
 
   <div id="successModal" class="modal">
@@ -366,7 +362,7 @@
       <div class="success-text">📢 注意事項</div>
       <div id="infoContent" style="margin-top:10px; font-size:14px; white-space:pre-line;"></div>
 
-      <button class="btn" onclick="confirmInfo()">我已閱讀</button>
+      <button class="btn" id="confirmInfoBtn" onclick="confirmInfo()">我已閱讀</button>
     </div>
   </div>
 
