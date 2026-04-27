@@ -102,10 +102,26 @@
     }
 
     /* 不同 type 的顏色 */
-    .slot-free    { border-color: #e74c3c !important; }   /* 自潛 紅 */
-    .slot-mermaid { border-color: #e67e22 !important; }   /* 人魚 橙 */
-    .slot-dance   { border-color: #f1c40f !important; }   /* 水舞 黃 */
-    .slot-scuba   { border-color: #27ae60 !important; }   /* 水肺 綠 */
+    .slot-free {
+      border-color: #e74c3c !important;
+    }
+
+    /* 自潛 紅 */
+    .slot-mermaid {
+      border-color: #e67e22 !important;
+    }
+
+    /* 人魚 橙 */
+    .slot-dance {
+      border-color: #f1c40f !important;
+    }
+
+    /* 水舞 黃 */
+    .slot-scuba {
+      border-color: #27ae60 !important;
+    }
+
+    /* 水肺 綠 */
 
     /* 選中:邊框加粗 + 淡綠背景 */
     #slots .card.selected {
@@ -269,8 +285,7 @@
   <div id="infoModal" class="modal">
     <div class="modal-content">
       <div class="success-text">📢 注意事項</div>
-      <div id="infoContent" class="info-text-left"
-        style="margin-top:10px; font-size:14px; white-space:pre-line;"></div>
+      <div id="infoContent" class="info-text-left" style="margin-top:10px; font-size:14px; white-space:pre-line;"></div>
       <button class="btn" id="confirmInfoBtn" onclick="confirmInfo()">我已閱讀</button>
     </div>
   </div>
@@ -381,28 +396,42 @@
           const div = document.createElement("div");
           div.className = "card " + getTypeClass(s.type);
 
-          const remaining = s.maxPeople - s.currentPeople;
-          let statusText = remaining > 0 ? `剩餘:${remaining} 人` : `❌ 已額滿`;
+          // 🔥 三種狀態判斷
+          let statusHTML = "";
+          let isFull = false;
+
+          if (s.currentPeople >= s.maxPeople) {
+            // 🔴 已滿團
+            statusHTML = `<div class="slot-sub" style="color:#999; font-weight:600;">❌ 已滿團</div>`;
+            isFull = true;
+          } else if (s.currentPeople >= s.triggerPeople) {
+            // 🟢 已成團
+            statusHTML = `<div class="slot-sub" style="color:#27ae60; font-weight:600;">✅ 已成團 目前 ${s.currentPeople} 人</div>`;
+          } else {
+            // 🟡 未成團
+            const need = s.triggerPeople - s.currentPeople;
+            statusHTML = `<div class="slot-sub" style="color:#e67e22; font-weight:600;">⏳ 未成團 目前 ${s.currentPeople} 人(還差 ${need} 人成團)</div>`;
+          }
 
           div.innerHTML = `
-            <div class="slot-title">${s.type}</div>
-            <div class="slot-info">📍 ${s.location || ""}</div>
-            <div class="slot-info">🕒 ${s.slot}</div>
-            <div class="slot-info">💰 ${s.price ? s.price + " 元" : ""}</div>
-            <div class="slot-sub">${statusText}</div>
-          `;
+    <div class="slot-title">${s.type}</div>
+    <div class="slot-info">📍 ${s.location || ""}</div>
+    <div class="slot-info">🕒 ${s.slot}</div>
+    <div class="slot-info">💰 ${s.price ? s.price + " 元" : ""}</div>
+    ${statusHTML}
+  `;
 
-          if (remaining <= 0) {
+          if (isFull) {
             div.style.opacity = "0.5";
             div.style.pointerEvents = "none";
             if (selectedKey === `${s.type}|${s.slot}`) {
               selected = null;
-              showAlert("您剛才選的場次已額滿,請重新選擇");
+              showAlert("您剛才選的場次已滿團,請重新選擇");
             }
           }
 
-          // 還原選中狀態(更新 selected 物件,因為 currentPeople 會變)
-          if (selectedKey === `${s.type}|${s.slot}` && remaining > 0) {
+          // 還原選中狀態
+          if (selectedKey === `${s.type}|${s.slot}` && !isFull) {
             div.classList.add("selected");
             selected = s;
           }
