@@ -32,6 +32,7 @@
       border-radius: 16px;
       text-align: center;
       animation: pop 0.3s ease;
+      max-width: 90%;
     }
 
     .checkmark {
@@ -92,11 +93,19 @@
       padding: 12px;
       margin-bottom: 12px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      border: 2px solid transparent;
+      /* 👈 預留邊框空間,選中時切換顏色不會跳動 */
     }
 
     .slot-title {
       font-size: 16px;
       font-weight: 600;
+    }
+
+    .slot-info {
+      font-size: 13px;
+      color: #444;
+      margin-top: 4px;
     }
 
     .slot-sub {
@@ -120,16 +129,58 @@
       background: #ccc;
     }
 
-    input {
+    input,
+    select,
+    textarea {
       width: 100%;
       padding: 10px;
       margin-top: 6px;
       border-radius: 8px;
       border: 1px solid #ddd;
+      box-sizing: border-box;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 60px;
     }
 
     .selected {
-      border: 2px solid #06c755;
+      border: 3px solid #06c755 !important;
+      /* 👈 選中外框加粗 */
+    }
+
+    .required {
+      color: #e74c3c;
+      margin-left: 2px;
+    }
+
+    .equip-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .equip-item {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .equip-item input[type="checkbox"] {
+      width: auto;
+      margin: 0 10px 0 0;
+    }
+
+    .section-title {
+      font-weight: 600;
+      margin-bottom: 4px;
     }
   </style>
 </head>
@@ -141,28 +192,57 @@
   <div class="container">
 
     <div class="card">
-      <div>姓名/Line ID</div>
+      <div class="section-title">姓名/Line ID<span class="required">*</span></div>
       <input id="name" placeholder="請輸入姓名" />
     </div>
 
     <div class="card">
-      <div>連絡電話</div>
+      <div class="section-title">連絡電話<span class="required">*</span></div>
       <input id="phone" />
     </div>
 
     <div class="card">
-      <div>證照等級</div>
+      <div class="section-title">證照等級<span class="required">*</span></div>
       <input id="license" />
     </div>
 
     <div class="card">
-      <div>緊急聯絡人/電話</div>
+      <div class="section-title">緊急聯絡人/電話<span class="required">*</span></div>
       <input id="emergency" />
     </div>
 
     <div class="card">
-      <div>報名人數</div>
-      <input id="people" type="number" value="1" />
+      <div class="section-title">付款方式<span class="required">*</span></div>
+      <select id="payment">
+        <option value="">請選擇</option>
+        <option value="現金">現金</option>
+        <option value="轉帳">轉帳</option>
+        <option value="LinePay">LinePay</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="section-title">發票<span class="required">*</span></div>
+      <select id="invoice">
+        <option value="">請選擇</option>
+        <option value="不需要">不需要</option>
+        <option value="個人">個人</option>
+        <option value="公司">公司(請於備註填寫統編)</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="section-title">裝備租借(可複選)</div>
+      <div class="equip-list" id="equipList"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">備註</div>
+      <textarea id="note" placeholder="例如:統編、特殊需求等"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="section-title">團練場次<span class="required">*</span></div>
     </div>
 
     <div id="slots"></div>
@@ -192,12 +272,48 @@
     let userId = "";
     let selected = null;
 
+    // 裝備清單
+    const EQUIP_OPTIONS = [
+      "男防寒衣XL（200元/天）",
+      "男防寒衣L（200元/天）",
+      "男防寒衣Ｍ（200元/天）",
+      "女防寒衣L（200元/天）",
+      "女防寒衣M（200元/天）",
+      "女防寒衣Ｓ（200元/天）",
+      "女防寒衣XS（200元/天）",
+      "配重帶（100元/天）",
+      "面鏡呼吸管（100元/天）",
+      "蛙鞋M(150元/天）",
+      "蛙鞋S（150元/天）",
+      "蛙鞋XS（150元/天）",
+      "蛙鞋XXS（150元/天）"
+    ];
+
     window.onerror = function (msg, url, line) {
       alert("JS錯誤: " + msg + "\nline: " + line);
     };
     window.addEventListener("unhandledrejection", function (event) {
       alert("Promise錯誤: " + event.reason);
     });
+
+    function renderEquipList() {
+      const container = document.getElementById("equipList");
+      container.innerHTML = "";
+      EQUIP_OPTIONS.forEach((item, idx) => {
+        const label = document.createElement("label");
+        label.className = "equip-item";
+        label.innerHTML = `
+          <input type="checkbox" value="${item}" />
+          <span>${item}</span>
+        `;
+        container.appendChild(label);
+      });
+    }
+
+    function getSelectedEquip() {
+      const checked = document.querySelectorAll('#equipList input[type="checkbox"]:checked');
+      return Array.from(checked).map(c => c.value).join(", ");
+    }
 
     function showSuccess() {
       const modal = document.getElementById("successModal");
@@ -254,7 +370,10 @@
           let statusText = remaining > 0 ? `剩餘：${remaining} 人` : `❌ 已額滿`;
 
           div.innerHTML = `
-            <div class="slot-title">${s.type} - ${s.slot}</div>
+            <div class="slot-title">${s.type}</div>
+            <div class="slot-info">📍 ${s.location || ""}</div>
+            <div class="slot-info">🕒 ${s.slot}</div>
+            <div class="slot-info">💰 ${s.price ? s.price + " 元" : ""}</div>
             <div class="slot-sub">${statusText}</div>
           `;
 
@@ -264,7 +383,8 @@
           }
 
           div.onclick = () => {
-            document.querySelectorAll(".card").forEach(c => c.classList.remove("selected"));
+            // 只清掉 #slots 裡的 selected,不要清到表單那些 card
+            document.querySelectorAll("#slots .card").forEach(c => c.classList.remove("selected"));
             div.classList.add("selected");
             selected = s;
             console.log("選到:", selected);
@@ -284,11 +404,30 @@
       btn.innerText = "處理中...";
 
       try {
-        const name = document.getElementById("name").value;
-        const phone = document.getElementById("phone").value;
-        const license = document.getElementById("license").value;
-        const emergency = document.getElementById("emergency").value;
-        const people = Number(document.getElementById("people").value);
+        const name = document.getElementById("name").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        const license = document.getElementById("license").value.trim();
+        const emergency = document.getElementById("emergency").value.trim();
+        const payment = document.getElementById("payment").value;
+        const invoice = document.getElementById("invoice").value;
+        const note = document.getElementById("note").value.trim();
+        const equip = getSelectedEquip();
+
+        // 🔥 必填欄位驗證
+        const requiredFields = [
+          { val: name, label: "姓名" },
+          { val: phone, label: "連絡電話" },
+          { val: license, label: "證照等級" },
+          { val: emergency, label: "緊急聯絡人/電話" },
+          { val: payment, label: "付款方式" },
+          { val: invoice, label: "發票" }
+        ];
+
+        const missing = requiredFields.filter(f => !f.val).map(f => f.label);
+        if (missing.length > 0) {
+          alert("請填寫:" + missing.join("、"));
+          return;
+        }
 
         if (!selected) {
           alert("請選擇團練場次");
@@ -302,9 +441,12 @@
           phone,
           license,
           emergency,
+          payment,
+          invoice,
           type: selected.type,
           slot: selected.slot,
-          people
+          equip,
+          note
         };
 
         const query = new URLSearchParams(payload).toString();
@@ -329,6 +471,9 @@
         btn.disabled = false;
       }
     }
+
+    // 👇 初始化裝備清單
+    renderEquipList();
 
     // 👇 頁面一開就立刻彈 modal(瞬間反應)
     document.getElementById("infoModal").classList.add("show");
