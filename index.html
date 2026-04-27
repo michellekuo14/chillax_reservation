@@ -96,37 +96,32 @@
       border: 2px solid transparent;
     }
 
-    /* 場次卡片預設邊框(會被 type 顏色覆蓋) */
+    /* 場次卡片預設邊框(中性) */
     #slots .card {
-      border: 2px solid #ddd;
+      border: 1px solid #e0e0e0;
     }
 
-    /* 不同 type 的顏色 */
+    /* 不同 type 的底色(淡色,讓黑字清晰) */
     .slot-free {
-      border-color: #e74c3c !important;
+      background: rgba(231, 76, 60, 0.12) !important;
     }
-
     /* 自潛 紅 */
     .slot-mermaid {
-      border-color: #e67e22 !important;
+      background: rgba(230, 126, 34, 0.12) !important;
     }
-
     /* 人魚 橙 */
     .slot-dance {
-      border-color: #f1c40f !important;
+      background: rgba(241, 196, 15, 0.18) !important;
     }
-
     /* 水舞 黃 */
     .slot-scuba {
-      border-color: #27ae60 !important;
+      background: rgba(39, 174, 96, 0.12) !important;
     }
-
     /* 水肺 綠 */
 
-    /* 選中:邊框加粗 + 淡綠背景 */
+    /* 選中:深色粗邊框,底色保留 type 色 */
     #slots .card.selected {
-      border-width: 4px !important;
-      background: #f0fff5;
+      border: 3px solid #333 !important;
     }
 
     .slot-title {
@@ -248,11 +243,7 @@
 
     <div class="card">
       <div class="section-title">付款方式<span class="required">*</span></div>
-      <select id="payment">
-        <option value="">請選擇</option>
-        <option value="現金">現金</option>
-        <option value="LinePay">LinePay</option>
-      </select>
+      <input id="payment" placeholder="匯款請填後五碼/Linepay則填Linepay" />
     </div>
 
     <div class="card">
@@ -402,15 +393,16 @@
 
           if (s.currentPeople >= s.maxPeople) {
             // 🔴 已滿團
-            statusHTML = `<div class="slot-sub" style="color:#999; font-weight:600;">❌ 已滿團</div>`;
+            statusHTML = `<div class="slot-sub" style="color:#000; font-weight:700;">❌ ${maxPeople} 人已滿團</div>`;
             isFull = true;
           } else if (s.currentPeople >= s.triggerPeople) {
             // 🟢 已成團
-            statusHTML = `<div class="slot-sub" style="color:#27ae60; font-weight:600;">✅ 已成團 目前 ${s.currentPeople} 人</div>`;
+            const remain = s.maxPeople - s.currentPeople
+            statusHTML = `<div class="slot-sub" style="color:#000; font-weight:700;">✅ 已成團 目前 ${s.currentPeople} 人(還差 ${remain} 滿團)</div>`;
           } else {
             // 🟡 未成團
             const need = s.triggerPeople - s.currentPeople;
-            statusHTML = `<div class="slot-sub" style="color:#e67e22; font-weight:600;">⏳ 未成團 目前 ${s.currentPeople} 人(還差 ${need} 人成團)</div>`;
+            statusHTML = `<div class="slot-sub" style="color:#000; font-weight:700;">⏳ 未成團 目前 ${s.currentPeople} 人(還差 ${need} 人成團)</div>`;
           }
 
           div.innerHTML = `
