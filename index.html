@@ -96,34 +96,28 @@
       border: 2px solid transparent;
     }
 
-    /* 場次卡片預設邊框(中性) */
     #slots .card {
       border: 1px solid #e0e0e0;
+      cursor: pointer;
     }
 
-    /* 不同 type 的底色(淡色,讓黑字清晰) */
     .slot-free {
       background: rgba(231, 76, 60, 0.12) !important;
     }
 
-    /* 自潛 紅 */
     .slot-mermaid {
       background: rgba(230, 126, 34, 0.12) !important;
     }
 
-    /* 人魚 橙 */
     .slot-dance {
       background: rgba(241, 196, 15, 0.18) !important;
     }
 
-    /* 水舞 黃 */
     .slot-scuba {
       background: rgba(39, 174, 96, 0.12) !important;
     }
 
-    /* 水肺 綠 */
-
-    /* 選中:深色粗邊框,底色保留 type 色 */
+    /* 🔥 選中:深色粗邊框 */
     #slots .card.selected {
       border: 3px solid #333 !important;
     }
@@ -188,7 +182,6 @@
       margin-bottom: 4px;
     }
 
-    /* 裝備資訊區塊(純顯示,不是選項) */
     .equip-info {
       background: #f9f9f9;
       border-radius: 8px;
@@ -209,6 +202,18 @@
       line-height: 1.6;
       color: #333;
     }
+
+    /* 🔥 已選場次提示條 */
+    .selected-summary {
+      background: #fff;
+      border: 2px solid #06c755;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      color: #06c755;
+      font-weight: 600;
+    }
   </style>
 </head>
 
@@ -218,10 +223,13 @@
 
   <div class="container">
 
-    <!-- 場次區塊在最前面 -->
     <div class="card">
       <div class="section-title">團練場次<span class="required">*</span></div>
+      <div style="font-size:12px; color:#888; margin-top:4px;">可複選,點一下選取/取消</div>
     </div>
+
+    <!-- 🔥 已選場次提示 -->
+    <div id="selectedSummary" class="selected-summary" style="display:none;"></div>
 
     <div id="slots"></div>
 
@@ -255,7 +263,6 @@
       <input id="invoice" placeholder="不需要請填「無」" />
     </div>
 
-    <!-- 裝備資訊(從 information sheet B 欄動態載入) -->
     <div class="card">
       <div class="section-title">🤿 裝備租借資訊</div>
       <div class="equip-info" id="equipInfo">載入中...</div>
@@ -273,7 +280,7 @@
   <div id="successModal" class="modal">
     <div class="modal-content">
       <div class="checkmark">✔</div>
-      <div class="success-text">報名成功！</div>
+      <div class="success-text" id="successText">報名成功！</div>
     </div>
   </div>
 
@@ -285,7 +292,6 @@
     </div>
   </div>
 
-  <!-- 自訂提示彈窗(取代 alert) -->
   <div id="alertModal" class="modal">
     <div class="modal-content">
       <div class="success-text" id="alertTitle">提示</div>
@@ -298,11 +304,10 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyw7KenXXDbiT8-EMT355PN5iwvlIS2RNXPPVOHkOM-m42SpUc2afxNAe2UexsmVHOi/exec";
     const YOUR_LIFF_ID = "2009884041-ANvyV2S7";
     let userId = "";
-    let selected = null;
+    let selectedSlots = [];   // 🔥 改成陣列
     let slotsPolling = null;
     let isFirstLoad = true;
 
-    // type → CSS class 對應
     function getTypeClass(type) {
       if (type.includes("自潛")) return "slot-free";
       if (type.includes("人魚")) return "slot-mermaid";
@@ -311,7 +316,6 @@
       return "";
     }
 
-    // 自訂提示彈窗(取代 alert)
     function showAlert(message, title = "提示") {
       document.getElementById("alertTitle").innerText = title;
       document.getElementById("alertMessage").innerText = message;
@@ -329,7 +333,8 @@
       showAlert("Promise錯誤: " + event.reason, "錯誤");
     });
 
-    function showSuccess() {
+    function showSuccess(message) {
+      document.getElementById("successText").innerText = message || "報名成功！";
       const modal = document.getElementById("successModal");
       modal.classList.add("show");
 
@@ -339,22 +344,18 @@
         } else {
           modal.classList.remove("show");
         }
-      }, 1500);
+      }, 2500);
     }
 
-    // 一次拿注意事項 + 裝備清單
     async function loadInformation() {
       const btn = document.getElementById("confirmInfoBtn");
       try {
         const res = await fetch(`${GAS_URL}?action=getInformation`);
         const data = await res.json();
-
         document.getElementById("infoContent").innerText = data.content || "";
         btn.disabled = false;
         btn.innerText = "我已閱讀";
-
-        document.getElementById("equipInfo").innerText =
-          data.equipments || "暫無裝備可租借";
+        document.getElementById("equipInfo").innerText = data.equipments || "暫無裝備可租借";
       } catch (err) {
         console.error(err);
         document.getElementById("infoContent").innerText = "❌ 載入失敗,請重新整理";
@@ -372,82 +373,111 @@
       userId = profile.userId;
     }
 
+    // 🔥 比對 key,判斷某場次是否已選
+    function getSlotKey(s) {
+      return `${s.type}|${s.slot}`;
+    }
+
+    function isSelected(s) {
+      const key = getSlotKey(s);
+      return selectedSlots.some(x => getSlotKey(x) === key);
+    }
+
+    function toggleSlot(s) {
+      const key = getSlotKey(s);
+      const idx = selectedSlots.findIndex(x => getSlotKey(x) === key);
+      if (idx >= 0) {
+        selectedSlots.splice(idx, 1);
+      } else {
+        selectedSlots.push(s);
+      }
+      updateSelectedSummary();
+    }
+
+    // 🔥 更新「已選 N 場」提示條
+    function updateSelectedSummary() {
+      const el = document.getElementById("selectedSummary");
+      if (selectedSlots.length === 0) {
+        el.style.display = "none";
+        return;
+      }
+      el.style.display = "block";
+      const total = selectedSlots.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+      el.innerHTML = `已選 ${selectedSlots.length} 場 ・ 合計 ${total} 元`;
+    }
+
     async function loadSlots() {
       const container = document.getElementById("slots");
-
-      if (isFirstLoad) {
-        container.innerHTML = "載入中...";
-      }
+      if (isFirstLoad) container.innerHTML = "載入中...";
 
       try {
         const res = await fetch(`${GAS_URL}?action=getSlots&t=${Date.now()}`);
         const data = await res.json();
 
-        const selectedKey = selected ? `${selected.type}|${selected.slot}` : null;
-
         container.innerHTML = "";
+
+        // 🔥 用最新資料更新 selectedSlots(currentPeople 等可能變了)
+        const updatedSelected = [];
 
         data.forEach((s) => {
           const div = document.createElement("div");
           div.className = "card " + getTypeClass(s.type);
 
-          // 🔥 三種狀態判斷
           let statusHTML = "";
           let isFull = false;
 
           if (s.currentPeople >= s.maxPeople) {
-            // 🔴 已滿團
             statusHTML = `<div class="slot-sub" style="color:#000; font-weight:700;">❌ ${s.maxPeople} 人已滿團</div>`;
             isFull = true;
           } else if (s.currentPeople >= s.triggerPeople) {
-            // 🟢 已成團
             const remain = s.maxPeople - s.currentPeople;
             statusHTML = `<div class="slot-sub" style="color:#000; font-weight:700;">✅ 已成團 目前 ${s.currentPeople} 人(還差 ${remain} 滿團)</div>`;
           } else {
-            // 🟡 未成團
             const need = s.triggerPeople - s.currentPeople;
             statusHTML = `<div class="slot-sub" style="color:#000; font-weight:700;">⏳ 未成團 目前 ${s.currentPeople} 人(還差 ${need} 人成團)</div>`;
           }
 
           div.innerHTML = `
-    <div class="slot-title">${s.type}</div>
-    <div class="slot-info">📍 ${s.location || ""}</div>
-    <div class="slot-info">🕒 ${s.slot}</div>
-    <div class="slot-info">💰 ${s.price ? s.price + " 元" : ""}</div>
-    ${statusHTML}
-  `;
+            <div class="slot-title">${s.type}</div>
+            <div class="slot-info">📍 ${s.location || ""}</div>
+            <div class="slot-info">🕒 ${s.slot}</div>
+            <div class="slot-info">💰 ${s.price ? s.price + " 元" : ""}</div>
+            ${statusHTML}
+          `;
 
           if (isFull) {
             div.style.opacity = "0.5";
             div.style.pointerEvents = "none";
-            if (selectedKey === `${s.type}|${s.slot}`) {
-              selected = null;
-              showAlert("您剛才選的場次已滿團,請重新選擇");
+            // 如果原本選了這場但現在滿了 → 從選擇中移除
+            if (isSelected(s)) {
+              showAlert(`「${s.type} / ${s.slot}」已滿團,已從您的選擇中移除`);
+            }
+          } else {
+            // 還原選中狀態
+            if (isSelected(s)) {
+              div.classList.add("selected");
+              updatedSelected.push(s);   // 用最新資料替換
             }
           }
 
-          // 還原選中狀態
-          if (selectedKey === `${s.type}|${s.slot}` && !isFull) {
-            div.classList.add("selected");
-            selected = s;
-          }
-
           div.onclick = () => {
-            document.querySelectorAll("#slots .card").forEach(c => c.classList.remove("selected"));
-            div.classList.add("selected");
-            selected = s;
-            console.log("選到:", selected);
+            if (isFull) return;
+            toggleSlot(s);
+            div.classList.toggle("selected");
           };
 
           container.appendChild(div);
         });
 
+        // 🔥 用過濾過的最新版替換掉原本的 selectedSlots
+        selectedSlots = updatedSelected;
+        updateSelectedSummary();
+
         isFirstLoad = false;
       } catch (err) {
         console.error(err);
-        if (isFirstLoad) {
-          document.getElementById("slots").innerHTML = "❌ 載入失敗:" + err.message;
-        }
+        document.getElementById("slots").innerHTML =
+          "❌ 載入失敗:" + (err.message || err);
       }
     }
 
@@ -461,7 +491,6 @@
       slotsPolling = null;
     }
 
-    // 切回頁面立刻刷新一次
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
         loadSlots();
@@ -478,7 +507,7 @@
         const phone = document.getElementById("phone").value.trim();
         const license = document.getElementById("license").value.trim();
         const emergency = document.getElementById("emergency").value.trim();
-        const payment = document.getElementById("payment").value;
+        const payment = document.getElementById("payment").value.trim();
         const invoice = document.getElementById("invoice").value.trim();
         const note = document.getElementById("note").value.trim();
 
@@ -497,28 +526,28 @@
           return;
         }
 
-        if (!selected) {
-          showAlert("請選擇團練場次");
+        if (selectedSlots.length === 0) {
+          showAlert("請至少選擇一個團練場次");
           return;
         }
+
+        // 🔥 只傳 type + slot 就夠後端定位場次
+        const slotsPayload = selectedSlots.map(s => ({
+          type: s.type,
+          slot: s.slot
+        }));
 
         const payload = {
           action: "createBooking",
           userId,
-          name,
-          phone,
-          license,
-          emergency,
-          payment,
-          invoice,
-          type: selected.type,
-          slot: selected.slot,
+          name, phone, license, emergency,
+          payment, invoice,
+          selectedSlots: JSON.stringify(slotsPayload),   // 🔥 傳 JSON 字串
           note
         };
 
         const query = new URLSearchParams(payload).toString();
         const url = `${GAS_URL}?${query}`;
-        console.log("request url:", url);
 
         const res = await fetch(url);
         const result = await res.json();
@@ -526,7 +555,22 @@
 
         if (result.success) {
           stopPollingSlots();
-          showSuccess();
+          // 🔥 顯示報名結果(可能有部分失敗)
+          if (result.failedList && result.failedList.length > 0) {
+            showAlert(
+              `✅ 成功報名 ${result.successCount} 場\n\n❌ 失敗 ${result.failedList.length} 場:\n` +
+              result.failedList.join("\n"),
+              "報名結果"
+            );
+            // 失敗的場次清掉,重新刷一次
+            selectedSlots = [];
+            loadSlots();
+            btn.innerText = "確認報名";
+            btn.disabled = false;
+            startPollingSlots();
+            return;
+          }
+          showSuccess(`成功報名 ${result.successCount} 場！`);
         } else {
           showAlert(result.message || "報名失敗");
           loadSlots();
@@ -541,12 +585,10 @@
       }
     }
 
-    // 立刻彈注意事項 modal(瞬間反應)
     document.getElementById("infoModal").classList.add("show");
     document.getElementById("infoContent").innerText = "載入中...";
     document.getElementById("confirmInfoBtn").disabled = true;
 
-    // 並行載入,不互等
     init().catch(err => showAlert("LIFF init 失敗: " + err.message, "錯誤"));
     loadInformation();
     loadSlots();
