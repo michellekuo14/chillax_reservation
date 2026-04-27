@@ -206,6 +206,11 @@
   <div class="header">📅 團練預約</div>
 
   <div class="container">
+    <div class="card">
+      <div class="section-title">團練場次<span class="required">*</span></div>
+    </div>
+
+    <div id="slots"></div>
 
     <div class="card">
       <div class="section-title">姓名/Line ID<span class="required">*</span></div>
@@ -229,11 +234,7 @@
 
     <div class="card">
       <div class="section-title">付款方式<span class="required">*</span></div>
-      <select id="payment">
-        <option value="">請選擇</option>
-        <option value="匯款">匯款</option>
-        <option value="Line Pay">Line Pay</option>
-      </select>
+      <input id="payment" placeholder="匯款請填後五碼/Line Pay則寫Line Pay" />
     </div>
 
     <div class="card">
@@ -242,20 +243,14 @@
     </div>
 
     <div class="card">
-      <div class="section-title">裝備租借(可複選)</div>
-      <div class="equip-list" id="equipList"></div>
+      <div class="section-title">🤿 裝備租借資訊</div>
+      <div class="equip-info" id="equipInfo">載入中...</div>
     </div>
 
     <div class="card">
       <div class="section-title">備註</div>
-      <textarea id="note" placeholder="特殊需求等"></textarea>
+      <textarea id="note" placeholder="裝備需求等等"></textarea>
     </div>
-
-    <div class="card">
-      <div class="section-title">團練場次<span class="required">*</span></div>
-    </div>
-
-    <div id="slots"></div>
 
     <button class="btn" onclick="submitBooking()">確認報名</button>
 
@@ -271,8 +266,7 @@
   <div id="infoModal" class="modal">
     <div class="modal-content">
       <div class="success-text">📢 注意事項</div>
-      <div id="infoContent" class="info-text-left"
-        style="margin-top:10px; font-size:14px; white-space:pre-line;"></div>
+      <div id="infoContent" class="info-text-left" style="margin-top:10px; font-size:14px; white-space:pre-line;"></div>
       <button class="btn" id="confirmInfoBtn" onclick="confirmInfo()">我已閱讀</button>
     </div>
   </div>
@@ -372,6 +366,18 @@
       }
     }
 
+    async function loadEquipments() {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getEquipments`);
+        const data = await res.json();
+        const el = document.getElementById("equipInfo");
+        el.innerText = data.content || "暫無裝備可租借";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("equipInfo").innerText = "❌ 載入失敗";
+      }
+    }
+
     function confirmInfo() {
       document.getElementById("infoModal").classList.remove("show");
     }
@@ -382,13 +388,24 @@
       userId = profile.userId;
     }
 
+    let slotsPolling = null;  // 🔥 polling 計時器
+    let isFirstLoad = true;   // 🔥 區分首次 vs 更新
+
     async function loadSlots() {
       const container = document.getElementById("slots");
-      container.innerHTML = "載入中...";
+
+      // 🔥 只有首次載入才顯示「載入中...」,後續刷新不閃爍
+      if (isFirstLoad) {
+        container.innerHTML = "載入中...";
+      }
 
       try {
-        const res = await fetch(`${GAS_URL}?action=getSlots`);
+        // 🔥 加時間戳避免瀏覽器快取
+        const res = await fetch(`${GAS_URL}?action=getSlots&t=${Date.now()}`);
         const data = await res.json();
+
+        // 🔥 記住目前選中的場次,刷新後保留
+        const selectedKey = selected ? `${selected.type}|${selected.slot}` : null;
 
         container.innerHTML = "";
 
@@ -397,19 +414,30 @@
           div.className = "card";
 
           const remaining = s.maxPeople - s.currentPeople;
-          let statusText = remaining > 0 ? `剩餘：${remaining} 人` : `❌ 已額滿`;
+          let statusText = remaining > 0 ? `剩餘:${remaining} 人` : `❌ 已額滿`;
 
           div.innerHTML = `
-            <div class="slot-title">${s.type}</div>
-            <div class="slot-info">📍 ${s.location || ""}</div>
-            <div class="slot-info">🕒 ${s.slot}</div>
-            <div class="slot-info">💰 ${s.price ? s.price + " 元" : ""}</div>
-            <div class="slot-sub">${statusText}</div>
-          `;
+        <div class="slot-title">${s.type}</div>
+        <div class="slot-info">📍 ${s.location || ""}</div>
+        <div class="slot-info">🕒 ${s.slot}</div>
+        <div class="slot-info">💰 ${s.price ? s.price + " 元" : ""}</div>
+        <div class="slot-sub">${statusText}</div>
+      `;
 
           if (remaining <= 0) {
             div.style.opacity = "0.5";
             div.style.pointerEvents = "none";
+            // 🔥 如果原本選的場次滿了,清掉選擇
+            if (selectedKey === `${s.type}|${s.slot}`) {
+              selected = null;
+              showAlert("您剛才選的場次已額滿,請重新選擇");
+            }
+          }
+
+          // 🔥 還原選中狀態
+          if (selectedKey === `${s.type}|${s.slot}` && remaining > 0) {
+            div.classList.add("selected");
+            selected = s;  // 更新 selected 物件(因為 currentPeople 變了)
           }
 
           div.onclick = () => {
@@ -421,11 +449,36 @@
 
           container.appendChild(div);
         });
+
+        isFirstLoad = false;
       } catch (err) {
         console.error(err);
-        document.getElementById("slots").innerHTML = "❌ 載入失敗";
+        if (isFirstLoad) {
+          document.getElementById("slots").innerHTML = "❌ 載入失敗";
+        }
+        // 🔥 後續刷新失敗就靜默,不要打擾使用者
       }
     }
+
+    // 🔥 開始定時刷新(每 5 秒)
+    function startPollingSlots() {
+      if (slotsPolling) return;  // 避免重複
+      slotsPolling = setInterval(loadSlots, 5000);
+    }
+
+    // 🔥 停止刷新
+    function stopPollingSlots() {
+      clearInterval(slotsPolling);
+      slotsPolling = null;
+    }
+
+    // 🔥 切回頁面時立刻刷一次(B 方案)
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        loadSlots();
+      }
+    });
+
 
     async function submitBooking() {
       const btn = document.querySelector(".container > .btn");
@@ -473,7 +526,6 @@
           invoice,
           type: selected.type,
           slot: selected.slot,
-          equip,
           note
         };
 
@@ -509,7 +561,9 @@
 
     init().catch(err => showAlert("LIFF init 失敗: " + err.message, "錯誤"));
     loadInformation();
+    loadEquipments();
     loadSlots();
+    startPollingSlots();   // 🔥 開啟定時刷新
   </script>
 
 </body>
