@@ -286,22 +286,6 @@
     let userId = "";
     let selected = null;
 
-    const EQUIP_OPTIONS = [
-      "男防寒衣XL（200元/天）",
-      "男防寒衣L（200元/天）",
-      "男防寒衣Ｍ（200元/天）",
-      "女防寒衣L（200元/天）",
-      "女防寒衣M（200元/天）",
-      "女防寒衣Ｓ（200元/天）",
-      "女防寒衣XS（200元/天）",
-      "配重帶（100元/天）",
-      "面鏡呼吸管（100元/天）",
-      "蛙鞋M(150元/天）",
-      "蛙鞋S（150元/天）",
-      "蛙鞋XS（150元/天）",
-      "蛙鞋XXS（150元/天）"
-    ];
-
     // 🔥 自訂提示彈窗(取代 alert,沒有網址列那行)
     function showAlert(message, title = "提示") {
       document.getElementById("alertTitle").innerText = title;
@@ -320,24 +304,6 @@
       showAlert("Promise錯誤: " + event.reason, "錯誤");
     });
 
-    function renderEquipList() {
-      const container = document.getElementById("equipList");
-      container.innerHTML = "";
-      EQUIP_OPTIONS.forEach((item, idx) => {
-        const label = document.createElement("label");
-        label.className = "equip-item";
-        label.innerHTML = `
-          <input type="checkbox" value="${item}" />
-          <span>${item}</span>
-        `;
-        container.appendChild(label);
-      });
-    }
-
-    function getSelectedEquip() {
-      const checked = document.querySelectorAll('#equipList input[type="checkbox"]:checked');
-      return Array.from(checked).map(c => c.value).join(", ");
-    }
 
     function showSuccess() {
       const modal = document.getElementById("successModal");
@@ -357,24 +323,21 @@
       try {
         const res = await fetch(`${GAS_URL}?action=getInformation`);
         const data = await res.json();
+
         document.getElementById("infoContent").innerText = data.content;
         btn.disabled = false;
         btn.innerText = "我已閱讀";
+
+        // 🔥 順便填裝備清單
+        const equipEl = document.getElementById("equipInfo");
+        if (equipEl) {
+          equipEl.innerText = data.equipments || "暫無裝備可租借";
+        }
       } catch (err) {
         console.error(err);
         document.getElementById("infoContent").innerText = "❌ 載入失敗,請重新整理";
-      }
-    }
-
-    async function loadEquipments() {
-      try {
-        const res = await fetch(`${GAS_URL}?action=getEquipments`);
-        const data = await res.json();
-        const el = document.getElementById("equipInfo");
-        el.innerText = data.content || "暫無裝備可租借";
-      } catch (err) {
-        console.error(err);
-        document.getElementById("equipInfo").innerText = "❌ 載入失敗";
+        const equipEl = document.getElementById("equipInfo");
+        if (equipEl) equipEl.innerText = "❌ 載入失敗";
       }
     }
 
@@ -493,7 +456,6 @@
         const payment = document.getElementById("payment").value;
         const invoice = document.getElementById("invoice").value.trim();
         const note = document.getElementById("note").value.trim();
-        const equip = getSelectedEquip();
 
         const requiredFields = [
           { val: name, label: "姓名" },
