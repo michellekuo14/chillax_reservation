@@ -134,7 +134,7 @@
 
 <body>
 
-  <div class="header">📅 團練預約</div>
+  <div class="header">📅 鬆鬆潛團練預約</div>
 
   <div class="container">
 
@@ -306,9 +306,9 @@
           if (isFull) {
             statusText = `❌ ${s.maxPeople} 人已滿團`;
           } else if (s.currentPeople >= s.triggerPeople) {
-            statusText = `✅ 已成團 目前 ${s.currentPeople} 人(還差 ${s.maxPeople - s.currentPeople} 滿團)`;
+            statusText = `✅ 已成團 目前 ${s.currentPeople} 人(差 ${s.maxPeople - s.currentPeople} 人滿團)`;
           } else {
-            statusText = `⏳ 未成團 目前 ${s.currentPeople} 人(還差 ${s.triggerPeople - s.currentPeople} 人成團)`;
+            statusText = `⏳ 未成團 目前 ${s.currentPeople} 人(差 ${s.triggerPeople - s.currentPeople} 人成團)`;
           }
 
           div.innerHTML = `
