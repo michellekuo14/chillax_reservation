@@ -5,70 +5,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>我要報名團練</title>
-
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-    }
-
-    .modal.show {
-      display: flex;
-    }
-
-    .modal-content {
-      background: white;
-      padding: 30px;
-      border-radius: 16px;
-      text-align: center;
-      animation: pop 0.3s ease;
-      max-width: 90%;
-    }
-
-    .checkmark {
-      font-size: 50px;
-      color: #06c755;
-      animation: scale 0.4s ease;
-    }
-
-    .success-text {
-      margin-top: 10px;
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    @keyframes pop {
-      from {
-        transform: scale(0.8);
-        opacity: 0;
-      }
-
-      to {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-
-    @keyframes scale {
-      from {
-        transform: scale(0);
-      }
-
-      to {
-        transform: scale(1);
-      }
-    }
-
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
@@ -83,9 +22,7 @@
       font-weight: bold;
     }
 
-    .container {
-      padding: 16px;
-    }
+    .container { padding: 16px; }
 
     .card {
       background: white;
@@ -101,43 +38,18 @@
       cursor: pointer;
     }
 
-    .slot-free {
-      background: rgba(231, 76, 60, 0.12) !important;
-    }
-
-    .slot-mermaid {
-      background: rgba(230, 126, 34, 0.12) !important;
-    }
-
-    .slot-dance {
-      background: rgba(241, 196, 15, 0.18) !important;
-    }
-
-    .slot-scuba {
-      background: rgba(39, 174, 96, 0.12) !important;
-    }
-
-    /* 🔥 選中:深色粗邊框 */
     #slots .card.selected {
       border: 3px solid #333 !important;
     }
 
-    .slot-title {
-      font-size: 16px;
-      font-weight: 600;
-    }
+    .slot-free    { background: rgba(231, 76, 60, 0.12) !important; }
+    .slot-mermaid { background: rgba(230, 126, 34, 0.12) !important; }
+    .slot-dance   { background: rgba(241, 196, 15, 0.18) !important; }
+    .slot-scuba   { background: rgba(39, 174, 96, 0.12) !important; }
 
-    .slot-info {
-      font-size: 13px;
-      color: #444;
-      margin-top: 4px;
-    }
-
-    .slot-sub {
-      font-size: 13px;
-      color: #666;
-      margin-top: 4px;
-    }
+    .slot-title { font-size: 16px; font-weight: 600; }
+    .slot-info { font-size: 13px; color: #444; margin-top: 4px; }
+    .slot-status { font-size: 13px; color: #000; font-weight: 700; margin-top: 4px; }
 
     .btn {
       width: 100%;
@@ -149,14 +61,9 @@
       font-size: 16px;
       margin-top: 10px;
     }
+    .btn:disabled { background: #ccc; }
 
-    .btn:disabled {
-      background: #ccc;
-    }
-
-    input,
-    select,
-    textarea {
+    input, textarea {
       width: 100%;
       padding: 10px;
       margin-top: 6px;
@@ -166,21 +73,10 @@
       font-family: inherit;
       font-size: 14px;
     }
+    textarea { resize: vertical; min-height: 60px; }
 
-    textarea {
-      resize: vertical;
-      min-height: 60px;
-    }
-
-    .required {
-      color: #e74c3c;
-      margin-left: 2px;
-    }
-
-    .section-title {
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
+    .required { color: #e74c3c; margin-left: 2px; }
+    .section-title { font-weight: 600; margin-bottom: 4px; }
 
     .equip-info {
       background: #f9f9f9;
@@ -190,17 +86,6 @@
       font-size: 14px;
       line-height: 1.8;
       white-space: pre-line;
-    }
-
-    .info-text-left {
-      text-align: left;
-    }
-
-    .alert-text {
-      margin: 10px 0 20px;
-      font-size: 15px;
-      line-height: 1.6;
-      color: #333;
     }
 
     .selected-summary {
@@ -213,6 +98,36 @@
       color: #06c755;
       font-weight: 600;
       text-align: center;
+    }
+
+    .modal {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    .modal.show { display: flex; }
+
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      text-align: center;
+      animation: pop 0.3s ease;
+      max-width: 90%;
+    }
+
+    .checkmark { font-size: 50px; color: #06c755; }
+    .success-text { margin-top: 10px; font-size: 18px; font-weight: bold; }
+    .alert-text { margin: 10px 0 20px; font-size: 15px; line-height: 1.6; color: #333; }
+    .info-text-left { text-align: left; }
+
+    @keyframes pop {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
   </style>
 </head>
@@ -229,8 +144,6 @@
     </div>
 
     <div id="slots"></div>
-
-    <!-- 🔥 已選場次提示 -->
     <div id="selectedSummary" class="selected-summary" style="display:none;"></div>
 
     <div class="card">
@@ -303,10 +216,16 @@
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyw7KenXXDbiT8-EMT355PN5iwvlIS2RNXPPVOHkOM-m42SpUc2afxNAe2UexsmVHOi/exec";
     const YOUR_LIFF_ID = "2009884041-ANvyV2S7";
+
     let userId = "";
-    let selectedSlots = [];   // 🔥 改成陣列
+    let selectedSlots = [];
     let slotsPolling = null;
     let isFirstLoad = true;
+
+    // ===== 工具函式 =====
+    const $ = id => document.getElementById(id);
+    const slotKey = s => `${s.type}|${s.slot}`;
+    const isSelected = s => selectedSlots.some(x => slotKey(x) === slotKey(s));
 
     function getTypeClass(type) {
       if (type.includes("自潛")) return "slot-free";
@@ -317,97 +236,58 @@
     }
 
     function showAlert(message, title = "提示") {
-      document.getElementById("alertTitle").innerText = title;
-      document.getElementById("alertMessage").innerText = message;
-      document.getElementById("alertModal").classList.add("show");
+      $("alertTitle").innerText = title;
+      $("alertMessage").innerText = message;
+      $("alertModal").classList.add("show");
     }
 
     function closeAlert() {
-      document.getElementById("alertModal").classList.remove("show");
+      $("alertModal").classList.remove("show");
     }
 
-    window.onerror = function (msg, url, line) {
-      showAlert("JS錯誤: " + msg + "\nline: " + line, "錯誤");
-    };
-    window.addEventListener("unhandledrejection", function (event) {
-      showAlert("Promise錯誤: " + event.reason, "錯誤");
-    });
-
     function showSuccess(message) {
-      document.getElementById("successText").innerText = message || "報名成功！";
-      const modal = document.getElementById("successModal");
-      modal.classList.add("show");
-
+      $("successText").innerText = message || "報名成功!";
+      $("successModal").classList.add("show");
       setTimeout(() => {
-        if (liff.isInClient()) {
-          liff.closeWindow();
-        } else {
-          modal.classList.remove("show");
-        }
+        if (liff.isInClient()) liff.closeWindow();
+        else $("successModal").classList.remove("show");
       }, 2500);
     }
 
-    async function loadInformation() {
-      const btn = document.getElementById("confirmInfoBtn");
-      try {
-        const res = await fetch(`${GAS_URL}?action=getInformation`);
-        const data = await res.json();
-        document.getElementById("infoContent").innerText = data.content || "";
-        btn.disabled = false;
-        btn.innerText = "我已閱讀";
-        document.getElementById("equipInfo").innerText = data.equipments || "暫無裝備可租借";
-      } catch (err) {
-        console.error(err);
-        document.getElementById("infoContent").innerText = "❌ 載入失敗,請重新整理";
-        document.getElementById("equipInfo").innerText = "❌ 載入失敗";
-      }
-    }
+    // ===== 全域錯誤處理 =====
+    window.onerror = (msg, url, line) => showAlert(`JS錯誤: ${msg}\nline: ${line}`, "錯誤");
+    window.addEventListener("unhandledrejection", e => showAlert(`Promise錯誤: ${e.reason}`, "錯誤"));
 
-    function confirmInfo() {
-      document.getElementById("infoModal").classList.remove("show");
-    }
-
+    // ===== LIFF 初始化 =====
     async function init() {
       await liff.init({ liffId: YOUR_LIFF_ID });
       const profile = await liff.getProfile();
       userId = profile.userId;
     }
 
-    // 🔥 比對 key,判斷某場次是否已選
-    function getSlotKey(s) {
-      return `${s.type}|${s.slot}`;
-    }
-
-    function isSelected(s) {
-      const key = getSlotKey(s);
-      return selectedSlots.some(x => getSlotKey(x) === key);
-    }
-
-    function toggleSlot(s) {
-      const key = getSlotKey(s);
-      const idx = selectedSlots.findIndex(x => getSlotKey(x) === key);
-      if (idx >= 0) {
-        selectedSlots.splice(idx, 1);
-      } else {
-        selectedSlots.push(s);
+    // ===== 載入資料 =====
+    async function loadInformation() {
+      const btn = $("confirmInfoBtn");
+      try {
+        const res = await fetch(`${GAS_URL}?action=getInformation`);
+        const data = await res.json();
+        $("infoContent").innerText = data.content || "";
+        $("equipInfo").innerText = data.equipments || "暫無裝備可租借";
+        btn.disabled = false;
+        btn.innerText = "我已閱讀";
+      } catch (err) {
+        console.error(err);
+        $("infoContent").innerText = "❌ 載入失敗,請重新整理";
+        $("equipInfo").innerText = "❌ 載入失敗";
       }
-      updateSelectedSummary();
     }
 
-    // 🔥 更新「已選 N 場」提示條
-    function updateSelectedSummary() {
-      const el = document.getElementById("selectedSummary");
-      if (selectedSlots.length === 0) {
-        el.style.display = "none";
-        return;
-      }
-      el.style.display = "block";
-      const total = selectedSlots.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
-      el.innerHTML = `已選 ${selectedSlots.length} 場 ・ 合計 ${total} 元`;
+    function confirmInfo() {
+      $("infoModal").classList.remove("show");
     }
 
     async function loadSlots() {
-      const container = document.getElementById("slots");
+      const container = $("slots");
       if (isFirstLoad) container.innerHTML = "載入中...";
 
       try {
@@ -415,26 +295,20 @@
         const data = await res.json();
 
         container.innerHTML = "";
-
-        // 🔥 用最新資料更新 selectedSlots(currentPeople 等可能變了)
         const updatedSelected = [];
 
-        data.forEach((s) => {
+        data.forEach(s => {
           const div = document.createElement("div");
           div.className = "card " + getTypeClass(s.type);
 
-          let statusHTML = "";
-          let isFull = false;
-
-          if (s.currentPeople >= s.maxPeople) {
-            statusHTML = `<div class="slot-sub" style="color:#000; font-weight:700;">❌ ${s.maxPeople} 人已滿團</div>`;
-            isFull = true;
+          const isFull = s.currentPeople >= s.maxPeople;
+          let statusText;
+          if (isFull) {
+            statusText = `❌ ${s.maxPeople} 人已滿團`;
           } else if (s.currentPeople >= s.triggerPeople) {
-            const remain = s.maxPeople - s.currentPeople;
-            statusHTML = `<div class="slot-sub" style="color:#000; font-weight:700;">✅ 已成團 目前 ${s.currentPeople} 人(還差 ${remain} 滿團)</div>`;
+            statusText = `✅ 已成團 目前 ${s.currentPeople} 人(還差 ${s.maxPeople - s.currentPeople} 滿團)`;
           } else {
-            const need = s.triggerPeople - s.currentPeople;
-            statusHTML = `<div class="slot-sub" style="color:#000; font-weight:700;">⏳ 未成團 目前 ${s.currentPeople} 人(還差 ${need} 人成團)</div>`;
+            statusText = `⏳ 未成團 目前 ${s.currentPeople} 人(還差 ${s.triggerPeople - s.currentPeople} 人成團)`;
           }
 
           div.innerHTML = `
@@ -442,48 +316,53 @@
             <div class="slot-info">📍 ${s.location || ""}</div>
             <div class="slot-info">🕒 ${s.slot}</div>
             <div class="slot-info">💰 ${s.price ? s.price + " 元" : ""}</div>
-            ${statusHTML}
+            <div class="slot-status">${statusText}</div>
           `;
 
           if (isFull) {
             div.style.opacity = "0.5";
             div.style.pointerEvents = "none";
-            // 如果原本選了這場但現在滿了 → 從選擇中移除
-            if (isSelected(s)) {
-              showAlert(`「${s.type} / ${s.slot}」已滿團,已從您的選擇中移除`);
-            }
-          } else {
-            // 還原選中狀態
-            if (isSelected(s)) {
-              div.classList.add("selected");
-              updatedSelected.push(s);   // 用最新資料替換
-            }
+            if (isSelected(s)) showAlert(`「${s.type} / ${s.slot}」已滿團,已從您的選擇中移除`);
+          } else if (isSelected(s)) {
+            div.classList.add("selected");
+            updatedSelected.push(s);
           }
 
           div.onclick = () => {
             if (isFull) return;
-            toggleSlot(s);
+            const idx = selectedSlots.findIndex(x => slotKey(x) === slotKey(s));
+            if (idx >= 0) selectedSlots.splice(idx, 1);
+            else selectedSlots.push(s);
             div.classList.toggle("selected");
+            updateSelectedSummary();
           };
 
           container.appendChild(div);
         });
 
-        // 🔥 用過濾過的最新版替換掉原本的 selectedSlots
         selectedSlots = updatedSelected;
         updateSelectedSummary();
-
         isFirstLoad = false;
       } catch (err) {
         console.error(err);
-        document.getElementById("slots").innerHTML =
-          "❌ 載入失敗:" + (err.message || err);
+        $("slots").innerHTML = "❌ 載入失敗:" + (err.message || err);
       }
     }
 
+    function updateSelectedSummary() {
+      const el = $("selectedSummary");
+      if (selectedSlots.length === 0) {
+        el.style.display = "none";
+        return;
+      }
+      const total = selectedSlots.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+      el.innerHTML = `已選 ${selectedSlots.length} 場 ・ 合計 ${total} 元`;
+      el.style.display = "block";
+    }
+
+    // ===== Polling =====
     function startPollingSlots() {
-      if (slotsPolling) return;
-      slotsPolling = setInterval(loadSlots, 5000);
+      if (!slotsPolling) slotsPolling = setInterval(loadSlots, 5000);
     }
 
     function stopPollingSlots() {
@@ -492,40 +371,34 @@
     }
 
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible" && slotsPolling) {
-        loadSlots();
-      }
+      if (document.visibilityState === "visible" && slotsPolling) loadSlots();
     });
 
+    // ===== 送出報名 =====
     async function submitBooking() {
       const btn = document.querySelector(".container > .btn");
       btn.disabled = true;
       btn.innerText = "處理中...";
-
-      // 🔥 送出前立刻停 polling,避免 race condition
       stopPollingSlots();
 
-      let shouldRestartPolling = true;  // 預設失敗時要重啟
+      let shouldRestartPolling = true;
 
       try {
-        const name = document.getElementById("name").value.trim();
-        const phone = document.getElementById("phone").value.trim();
-        const license = document.getElementById("license").value.trim();
-        const emergency = document.getElementById("emergency").value.trim();
-        const payment = document.getElementById("payment").value.trim();
-        const invoice = document.getElementById("invoice").value.trim();
-        const note = document.getElementById("note").value.trim();
+        const fields = {
+          name: $("name").value.trim(),
+          phone: $("phone").value.trim(),
+          license: $("license").value.trim(),
+          emergency: $("emergency").value.trim(),
+          payment: $("payment").value.trim(),
+          invoice: $("invoice").value.trim()
+        };
 
-        const requiredFields = [
-          { val: name, label: "姓名" },
-          { val: phone, label: "連絡電話" },
-          { val: license, label: "證照等級" },
-          { val: emergency, label: "緊急聯絡人/電話" },
-          { val: payment, label: "付款方式" },
-          { val: invoice, label: "發票/統編" }
-        ];
+        const labels = {
+          name: "姓名", phone: "連絡電話", license: "證照等級",
+          emergency: "緊急聯絡人/電話", payment: "付款方式", invoice: "發票/統編"
+        };
 
-        const missing = requiredFields.filter(f => !f.val).map(f => f.label);
+        const missing = Object.keys(fields).filter(k => !fields[k]).map(k => labels[k]);
         if (missing.length > 0) {
           showAlert("請填寫:" + missing.join("、"));
           return;
@@ -536,30 +409,20 @@
           return;
         }
 
-        const slotsPayload = selectedSlots.map(s => ({
-          type: s.type,
-          slot: s.slot
-        }));
-
         const payload = {
           action: "createBooking",
           userId,
-          name, phone, license, emergency,
-          payment, invoice,
-          selectedSlots: JSON.stringify(slotsPayload),
-          note
+          ...fields,
+          note: $("note").value.trim(),
+          selectedSlots: JSON.stringify(selectedSlots.map(s => ({ type: s.type, slot: s.slot })))
         };
 
-        const query = new URLSearchParams(payload).toString();
-        const url = `${GAS_URL}?${query}`;
-
+        const url = `${GAS_URL}?${new URLSearchParams(payload)}`;
         const res = await fetch(url);
         const result = await res.json();
-        console.log("result:", result);
 
         if (result.success) {
           if (result.failedList && result.failedList.length > 0) {
-            // 部分失敗:彈窗顯示成功 N 場 + 失敗清單
             showAlert(
               `✅ 成功報名 ${result.successCount} 場\n\n❌ 失敗 ${result.failedList.length} 場:\n` +
               result.failedList.join("\n"),
@@ -567,32 +430,28 @@
             );
             selectedSlots = [];
             loadSlots();
-            return;   // shouldRestartPolling 保持 true
+            return;
           }
-          // 完全成功 → 即將關閉 LIFF,不需要重啟 polling
           shouldRestartPolling = false;
           showSuccess(`成功報名 ${result.successCount} 場！`);
         } else {
           showAlert(result.message || "報名失敗");
           loadSlots();
         }
-
       } catch (err) {
         console.error(err);
         showAlert("連線失敗:" + err);
       } finally {
         btn.innerText = "確認報名";
         btn.disabled = false;
-        // 🔥 失敗時重啟 polling,讓使用者繼續看到最新人數
-        if (shouldRestartPolling) {
-          startPollingSlots();
-        }
+        if (shouldRestartPolling) startPollingSlots();
       }
     }
 
-    document.getElementById("infoModal").classList.add("show");
-    document.getElementById("infoContent").innerText = "載入中...";
-    document.getElementById("confirmInfoBtn").disabled = true;
+    // ===== 啟動 =====
+    $("infoModal").classList.add("show");
+    $("infoContent").innerText = "載入中...";
+    $("confirmInfoBtn").disabled = true;
 
     init().catch(err => showAlert("LIFF init 失敗: " + err.message, "錯誤"));
     loadInformation();
@@ -601,5 +460,4 @@
   </script>
 
 </body>
-
 </html>
