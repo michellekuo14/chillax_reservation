@@ -105,18 +105,22 @@
     .slot-free {
       background: rgba(231, 76, 60, 0.12) !important;
     }
+
     /* 自潛 紅 */
     .slot-mermaid {
       background: rgba(230, 126, 34, 0.12) !important;
     }
+
     /* 人魚 橙 */
     .slot-dance {
       background: rgba(241, 196, 15, 0.18) !important;
     }
+
     /* 水舞 黃 */
     .slot-scuba {
       background: rgba(39, 174, 96, 0.12) !important;
     }
+
     /* 水肺 綠 */
 
     /* 選中:深色粗邊框,底色保留 type 色 */
@@ -393,11 +397,11 @@
 
           if (s.currentPeople >= s.maxPeople) {
             // 🔴 已滿團
-            statusHTML = `<div class="slot-sub" style="color:#000; font-weight:700;">❌ ${maxPeople} 人已滿團</div>`;
+            statusHTML = `<div class="slot-sub" style="color:#000; font-weight:700;">❌ ${s.maxPeople} 人已滿團</div>`;
             isFull = true;
           } else if (s.currentPeople >= s.triggerPeople) {
             // 🟢 已成團
-            const remain = s.maxPeople - s.currentPeople
+            const remain = s.maxPeople - s.currentPeople;
             statusHTML = `<div class="slot-sub" style="color:#000; font-weight:700;">✅ 已成團 目前 ${s.currentPeople} 人(還差 ${remain} 滿團)</div>`;
           } else {
             // 🟡 未成團
@@ -442,7 +446,7 @@
       } catch (err) {
         console.error(err);
         if (isFirstLoad) {
-          document.getElementById("slots").innerHTML = "❌ 載入失敗";
+          document.getElementById("slots").innerHTML = "❌ 載入失敗:" + err.message;
         }
       }
     }
