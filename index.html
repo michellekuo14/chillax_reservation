@@ -306,7 +306,7 @@
           if (isFull) {
             statusText = `❌ ${s.maxPeople} 人已滿團`;
           } else if (s.currentPeople >= s.triggerPeople) {
-            statusText = `✅ 已成團 目前 ${s.currentPeople} 人(差 ${s.maxPeople - s.currentPeople} 人滿團)`;
+            statusText = `✅ 已成團 目前 ${s.currentPeople} 人(再 ${s.maxPeople - s.currentPeople} 人滿團)`;
           } else {
             statusText = `⏳ 未成團 目前 ${s.currentPeople} 人(差 ${s.triggerPeople - s.currentPeople} 人成團)`;
           }
