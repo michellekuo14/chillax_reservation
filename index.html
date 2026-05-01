@@ -332,11 +332,11 @@
 
     // ===== LIFF 初始化 =====
     async function init() {
+      await liff.init({ liffId: YOUR_LIFF_ID });
       if (!liff.isLoggedIn()) {
         liff.login();
         return; // 很重要，避免繼續往下跑
       }
-      await liff.init({ liffId: YOUR_LIFF_ID });
       const profile = await liff.getProfile();
       userId = profile.userId;
     }
