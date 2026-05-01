@@ -548,10 +548,18 @@
     $("infoContent").innerText = "載入中...";
     $("confirmInfoBtn").disabled = true;
 
-    init().catch(err => showAlert("LIFF init 失敗: " + err.message, "錯誤"));
-    loadInformation();
-    loadSlots();
-    startPollingSlots();
+    init()
+      .then(() => {
+        // 只有在 init 成功(且登入成功)後，才開始抓資料
+        console.log("初始化成功，開始載入場次...");
+        loadInformation();
+        loadSlots();
+        startPollingSlots();
+      })
+      .catch(err => {
+        console.error("啟動失敗:", err);
+        // 如果這裡報錯，通常是 LIFF ID 或網路問題
+      });
   </script>
 
 </body>
