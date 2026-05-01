@@ -349,9 +349,16 @@
           return Promise.reject("Redirecting to login..."); // 阻止後續執行
         }
 
+
+
         // 第三步：確認登入後，才能抓取個人資料
         const profile = await liff.getProfile();
         userId = profile.userId;
+
+        // 如果網址帶有 access_token，手動清理它，防止干擾後續請求
+        if (window.location.hash.includes("access_token")) {
+          window.history.replaceState(null, null, window.location.pathname);
+        }
         console.log("LIFF 初始化完成 UserId:", userId);
 
         // 額外檢查：如果 userId 還是空的，手動拋錯
