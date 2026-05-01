@@ -338,20 +338,18 @@
 
     // ===== LIFF 初始化 =====
     async function init() {
+      const MY_ID = "2009951947-X809HLG4";
       try {
-        // 第一步：一定要先執行 init，SDK 才會掛載 LIFF ID
-        await liff.init({ liffId: "2009951947-X809HLG4" });
+        // 1. 初始化
+        await liff.init({ liffId: MY_ID });
 
-        // 第二步：init 成功後，才能檢查登入狀態
+        // 2. 處理登入跳轉後的狀態
         if (!liff.isLoggedIn()) {
-          console.log("用戶未登入，引導登入...");
           liff.login();
-          return Promise.reject("Redirecting to login..."); // 阻止後續執行
+          return Promise.reject("Navigating to login...");
         }
 
-
-
-        // 第三步：確認登入後，才能抓取個人資料
+        // 3. 確保獲取 Profile，並給一點緩衝時間
         const profile = await liff.getProfile();
         userId = profile.userId;
 
@@ -359,15 +357,15 @@
         if (window.location.hash.includes("access_token")) {
           window.history.replaceState(null, null, window.location.pathname);
         }
-        console.log("LIFF 初始化完成 UserId:", userId);
 
-        // 額外檢查：如果 userId 還是空的，手動拋錯
-        if (!userId) throw new Error("取得 UserId 失敗");
-        return userId; // 回傳成功訊息
+        console.log("LIFF 初始化完成 UserId:", userId);
+        return userId;
 
       } catch (err) {
-        console.error("LIFF 初始化失敗:", err);
-        showAlert("LIFF 初始化失敗: " + err.message, "錯誤");
+        console.error("LIFF 初始化具體錯誤:", err);
+        // 增加一個彈窗顯示具體錯誤 code，方便 Debug
+        showAlert("初始化失敗: " + (err.code || err.message));
+        throw err;
       }
     }
 
