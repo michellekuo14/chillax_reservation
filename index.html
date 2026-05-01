@@ -332,13 +332,26 @@
 
     // ===== LIFF 初始化 =====
     async function init() {
-      await liff.init({ liffId: YOUR_LIFF_ID });
-      if (!liff.isLoggedIn()) {
-        liff.login();
-        return; // 很重要，避免繼續往下跑
+      try {
+        // 第一步：一定要先執行 init，SDK 才會掛載 LIFF ID
+        await liff.init({ liffId: YOUR_LIFF_ID });
+
+        // 第二步：init 成功後，才能檢查登入狀態
+        if (!liff.isLoggedIn()) {
+          console.log("用戶未登入，引導登入...");
+          liff.login();
+          return;
+        }
+
+        // 第三步：確認登入後，才能抓取個人資料
+        const profile = await liff.getProfile();
+        userId = profile.userId;
+        console.log("LIFF 初始化完成 UserId:", userId);
+
+      } catch (err) {
+        console.error("LIFF 初始化失敗:", err);
+        showAlert("LIFF 初始化失敗: " + err.message, "錯誤");
       }
-      const profile = await liff.getProfile();
-      userId = profile.userId;
     }
 
     // ===== 載入資料 =====
