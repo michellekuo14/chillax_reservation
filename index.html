@@ -172,6 +172,12 @@
       text-align: center;
       animation: pop 0.3s ease;
       max-width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    #infoModal .modal-content {
+      max-width: 340px;
     }
 
     .checkmark {
@@ -194,6 +200,10 @@
 
     .info-text-left {
       text-align: left;
+      font-size: 16px;
+      line-height: 1.8;
+      color: #333;
+      padding: 8px 4px;
     }
 
     @keyframes pop {
@@ -278,7 +288,7 @@
   <div id="infoModal" class="modal">
     <div class="modal-content">
       <div class="success-text">📢 注意事項</div>
-      <div id="infoContent" class="info-text-left" style="margin-top:10px; font-size:14px; white-space:pre-line;"></div>
+      <div id="infoContent" class="info-text-left" style="margin-top:8px; font-size:22px; white-space:pre-line;"></div>
       <button class="btn" id="confirmInfoBtn" onclick="confirmInfo()">我已閱讀</button>
     </div>
   </div>
