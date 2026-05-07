@@ -181,7 +181,7 @@
 
     /* 🔥 注意事項 modal 標題加大 */
     #infoModal .success-text {
-      font-size: 15px;
+      font-size: 18px;
       margin-bottom: 8px;
     }
 
@@ -397,7 +397,7 @@
         $("infoContent").innerText = data.content || "";
         $("equipInfo").innerText = data.equipments || "暫無裝備可租借";
         btn.disabled = false;
-        btn.innerText = "我已閱讀";
+        btn.innerText = "我已詳細閱讀且同意進行報名";
       } catch (err) {
         console.error(err);
         $("infoContent").innerText = "❌ 載入失敗,請重新整理";
