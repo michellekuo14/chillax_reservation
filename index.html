@@ -179,6 +179,12 @@
       overflow-y: auto;
     }
 
+    /* 🔥 注意事項 modal 標題加大 */
+    #infoModal .success-text {
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+
     #infoModal .modal-content {
       max-width: 340px;
     }
@@ -292,7 +298,7 @@
     <div class="modal-content">
       <div class="success-text">📢 注意事項</div>
       <div id="infoContent" class="info-text-left" style="margin-top:8px; font-size:22px; white-space:pre-line;"></div>
-      <button class="btn" id="confirmInfoBtn" onclick="confirmInfo()">我已閱讀</button>
+      <button class="btn" id="confirmInfoBtn" onclick="confirmInfo()">我已詳細閱讀且同意進行報名</button>
     </div>
   </div>
 
@@ -315,7 +321,7 @@
 
     // ===== 工具函式 =====
     const $ = id => document.getElementById(id);
-    const slotKey = s => `${s.type}|${s.slot}`;
+    const slotKey = s => `${s.type}|${s.slot}|${s.location}`;
     const isSelected = s => selectedSlots.some(x => slotKey(x) === slotKey(s));
 
     function getTypeClass(type) {
@@ -531,7 +537,7 @@
           userId,
           ...fields,
           note: $("note").value.trim(),
-          selectedSlots: JSON.stringify(selectedSlots.map(s => ({ type: s.type, slot: s.slot })))
+          selectedSlots: JSON.stringify(selectedSlots.map(s => ({ type: s.type, slot: s.slot , location: s.location})))
         };
 
         const url = `${GAS_URL}?${new URLSearchParams(payload)}`;
